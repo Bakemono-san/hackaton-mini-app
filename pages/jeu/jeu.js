@@ -1,19 +1,19 @@
-// game.js
+// jeu.js - Page du jeu de 12 pions (Dame Sénégalaise)
+// La case centrale (index 12) est la cage de départ - navigable comme une case vide
+const Game = require('../../utils/game.js');
+
 Page({
   data: {
-    // État du plateau (0: vide, 1: joueur1, 2: joueur2, 3: croix/bloqué)
-    board: [
-      1, 1, 1, 1, 1,
-      1, 1, 1, 1, 1,
-      1, 1, 3, 2, 2,
-      2, 2, 2, 2, 2,
-      2, 2, 2, 2, 2
-    ],
-    currentPlayer: 1, // Joueur actuel (1 ou 2)
+    // État du plateau (0: vide, 1: joueur1, 2: joueur2, 3: croix/centre, 4: dame1, 5: dame2)
+    board: [],
+    currentPlayer: Game.PLAYER1, // Joueur actuel (1 ou 2)
     player1Score: 12, // Nombre de jetons restants
     player2Score: 12,
     selectedCell: null, // Cellule sélectionnée pour déplacement
-    gameMode: 'placement', // 'placement' ou 'movement'
+    isSurPlaceAvailable: false, // Si le bouton SUR PLACE est visible
+    
+    // État interne pour la règle SUR PLACE
+    surPlaceInfo: null, // { previousBoard, capturingPieces, lastMovePlayer }
   },
 
   onLoad(options) {
@@ -23,172 +23,202 @@ Page({
 
   initGame() {
     // Initialiser le plateau avec la configuration de départ
-    const board = new Array(25).fill(0);
+    const board = Game.initBoard();
+    const scores = Game.getScores(board);
     
-    // Placer les jetons du joueur 1 (en haut)
-    for (let i = 0; i < 12; i++) {
-      board[i] = 1;
-    }
-    
-    // Placer la croix au centre
-    board[12] = 3;
-    
-    // Placer les jetons du joueur 2 (en bas)
-    for (let i = 13; i < 25; i++) {
-      board[i] = 2;
-    }
+    // Mémoriser l'état initial pour le joueur 1
+    const captureState = Game.createCaptureState(board, Game.PLAYER1);
     
     this.setData({
       board: board,
-      currentPlayer: 1,
-      player1Score: 12,
-      player2Score: 12
+      currentPlayer: Game.PLAYER1,
+      player1Score: scores.player1,
+      player2Score: scores.player2,
+      selectedCell: null,
+      isSurPlaceAvailable: false,
+      surPlaceInfo: null
     });
+    
+    // Stocker l'état de capture en mémoire interne
+    this.captureStateBeforeMove = captureState;
   },
 
   onCellTap(e) {
     const index = e.currentTarget.dataset.index;
-    const { board, currentPlayer, selectedCell, gameMode } = this.data;
+    const { board, currentPlayer, selectedCell } = this.data;
     
-    if (gameMode === 'placement') {
-      // Mode placement initial
-      if (board[index] === 0) {
-        this.placeToken(index);
+    // Mode mouvement
+    if (selectedCell === null) {
+      // Sélectionner un jeton à déplacer
+      if (Game.isPlayerPiece(board[index], currentPlayer)) {
+        this.selectToken(index);
       }
     } else {
-      // Mode mouvement
-      if (selectedCell === null) {
-        // Sélectionner un jeton à déplacer
-        if (board[index] === currentPlayer) {
-          this.selectToken(index);
+      // Déplacer le jeton sélectionné
+      if (index === selectedCell) {
+        // Désélectionner si on clique sur le même jeton
+        this.deselectToken();
+      } else if (board[index] === Game.EMPTY) {
+        // Essayer de déplacer vers une case vide
+        const validation = Game.validateMove(selectedCell, index, board, currentPlayer);
+        if (validation.valid) {
+          this.moveToken(selectedCell, index, validation);
         }
-      } else {
-        // Déplacer le jeton sélectionné
-        if (board[index] === 0 && this.isValidMove(selectedCell, index)) {
-          this.moveToken(selectedCell, index);
-        } else if (board[index] === currentPlayer) {
-          // Sélectionner un autre jeton
-          this.selectToken(index);
-        }
+      } else if (Game.isPlayerPiece(board[index], currentPlayer)) {
+        // Sélectionner un autre jeton
+        this.selectToken(index);
       }
     }
-  },
-
-  placeToken(index) {
-    const { board, currentPlayer } = this.data;
-    const newBoard = [...board];
-    newBoard[index] = currentPlayer;
-    
-    this.setData({
-      board: newBoard
-    });
-    
-    this.checkWin();
-    this.switchPlayer();
   },
 
   selectToken(index) {
     this.setData({
       selectedCell: index
     });
-    
-    wx.showToast({
-      title: 'Jeton sélectionné',
-      icon: 'none',
-      duration: 1000
-    });
   },
 
-  moveToken(fromIndex, toIndex) {
-    const { board, currentPlayer } = this.data;
-    const newBoard = [...board];
-    
-    newBoard[fromIndex] = 0;
-    newBoard[toIndex] = currentPlayer;
-    
+  deselectToken() {
     this.setData({
-      board: newBoard,
       selectedCell: null
     });
-    
-    this.checkWin();
-    this.switchPlayer();
   },
 
-  isValidMove(fromIndex, toIndex) {
-    // Vérifier si le mouvement est adjacent (horizontal, vertical ou diagonal)
-    const fromRow = Math.floor(fromIndex / 5);
-    const fromCol = fromIndex % 5;
-    const toRow = Math.floor(toIndex / 5);
-    const toCol = toIndex % 5;
+  moveToken(fromIndex, toIndex, validation) {
+    const { board, currentPlayer } = this.data;
     
-    const rowDiff = Math.abs(fromRow - toRow);
-    const colDiff = Math.abs(fromCol - toCol);
+    // Stocker l'état de capture AVANT le mouvement (pour SUR PLACE)
+    const previousCaptureState = this.captureStateBeforeMove;
     
-    return (rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0);
+    // Effectuer le mouvement
+    const moveResult = Game.makeMove(
+      board,
+      fromIndex,
+      toIndex,
+      currentPlayer,
+      validation.isCapture,
+      validation.captureData ? validation.captureData.capturedIndex : undefined
+    );
+
+    const scores = Game.getScores(moveResult.newBoard);
+    
+    // Préparer l'état SUR PLACE pour le prochain joueur
+    const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+    let surPlaceInfo = null;
+    let isSurPlaceAvailable = false;
+    
+    // Vérifier si le bouton SUR PLACE doit apparaître
+    // Condition: l'adversaire (joueur actuel) avait des captures possibles et n'a pas capturé
+    if (!validation.isCapture && previousCaptureState.capturingPieces.length > 0) {
+      surPlaceInfo = {
+        previousBoard: previousCaptureState.board,
+        capturingPieces: previousCaptureState.capturingPieces,
+        lastMovePlayer: currentPlayer,
+        lastFromIndex: fromIndex,
+        lastToIndex: toIndex
+      };
+      isSurPlaceAvailable = true;
+    }
+    
+    this.setData({
+      board: moveResult.newBoard,
+      selectedCell: null,
+      player1Score: scores.player1,
+      player2Score: scores.player2,
+      isSurPlaceAvailable: isSurPlaceAvailable,
+      surPlaceInfo: surPlaceInfo
+    });
+    
+    // Préparer l'état de capture pour le prochain joueur
+    const nextCaptureState = Game.createCaptureState(moveResult.newBoard, opponent);
+    this.captureStateBeforeMove = nextCaptureState;
+    
+    // Vérifier l'état du jeu
+    this.checkGameState();
+    
+    // Passer au joueur suivant
+    this.switchPlayer(opponent);
   },
 
-  switchPlayer() {
-    const newPlayer = this.data.currentPlayer === 1 ? 2 : 1;
+  /**
+   * Active la règle SUR PLACE
+   * - Annule le dernier coup non-capturant
+   * - Retire le premier pion qui pouvait capturer
+   */
+  onPlace() {
+    const { surPlaceInfo, board, currentPlayer } = this.data;
+    
+    if (!surPlaceInfo) {
+      return;
+    }
+    
+    // Créer une copie du plateau
+    const newBoard = [...board];
+    
+    // Retirer le premier pion qui pouvait capturer (pas le dernier mouvement)
+    // car le pion qui aurait dû capturer est celui de l'adversaire au tour précédent
+    const firstCapturingPiece = surPlaceInfo.capturingPieces[0];
+    if (firstCapturingPiece !== undefined && Game.isPlayerPiece(newBoard[firstCapturingPiece], surPlaceInfo.lastMovePlayer)) {
+      newBoard[firstCapturingPiece] = Game.EMPTY;
+    }
+    
+    const scores = Game.getScores(newBoard);
+    
+    // Cacher le bouton et réinitialiser l'état
+    this.setData({
+      board: newBoard,
+      selectedCell: null,
+      isSurPlaceAvailable: false,
+      surPlaceInfo: null,
+      player1Score: scores.player1,
+      player2Score: scores.player2
+    });
+    
+    // Vérifier l'état du jeu après le retrait du pion
+    this.checkGameState();
+    
+    // Le tour continue avec le même joueur (l'adversaire qui a annoncé SUR PLACE)
+    // Préparer l'état de capture pour le prochain joueur (le joueur qui vient de jouer)
+    const nextPlayer = surPlaceInfo.lastMovePlayer;
+    const nextCaptureState = Game.createCaptureState(newBoard, nextPlayer);
+    this.captureStateBeforeMove = nextCaptureState;
+  },
+
+  switchPlayer(newPlayer) {
+    // Vérifier si le nouveau joueur a des coups possibles
+    const hasMoves = Game.hasLegalMoves(this.data.board, newPlayer);
+    
     this.setData({
       currentPlayer: newPlayer
     });
-  },
-
-  checkWin() {
-    const { board } = this.data;
     
-    // Vérifier les lignes
-    for (let row = 0; row < 5; row++) {
-      if (this.checkLine(board, row * 5, row * 5 + 4, 1)) {
-        return;
-      }
-    }
-    
-    // Vérifier les colonnes
-    for (let col = 0; col < 5; col++) {
-      if (this.checkLine(board, col, col + 20, 5)) {
-        return;
-      }
-    }
-    
-    // Vérifier les diagonales
-    if (this.checkLine(board, 0, 24, 6) || this.checkLine(board, 4, 20, 4)) {
-      return;
+    if (!hasMoves) {
+      // Le joueur n'a pas de mouvements possibles
+      const winner = newPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+      this.announceWinner(winner, 'Le joueur n\'a plus de coups possibles');
     }
   },
 
-  checkLine(board, start, end, step) {
-    const firstToken = board[start];
-    if (firstToken === 0 || firstToken === 3) return false;
+  checkGameState() {
+    const { board, currentPlayer } = this.data;
     
-    for (let i = start; i <= end; i += step) {
-      if (board[i] !== firstToken) return false;
+    const gameOver = Game.checkGameOver(board, currentPlayer);
+    
+    if (gameOver.gameOver) {
+      this.announceWinner(gameOver.winner, gameOver.reason);
     }
-    
-    this.announceWinner(firstToken);
-    return true;
   },
 
-  announceWinner(player) {
+  announceWinner(player, reason = '') {
+    const message = reason ? `Joueur ${player} a gagné! (${reason})` : `Joueur ${player} a gagné!`;
+    
     wx.showModal({
       title: 'Victoire!',
-      content: `Joueur ${player} a gagné!`,
+      content: message,
       showCancel: false,
       success: () => {
         this.initGame();
       }
     });
-  },
-
-  onPlace() {
-    // Fonction pour le bouton "Sur Place"
-    wx.showToast({
-      title: 'Tour passé',
-      icon: 'success',
-      duration: 1500
-    });
-    this.switchPlayer();
   },
 
   onAbandon() {
@@ -199,8 +229,8 @@ Page({
       cancelText: 'Non',
       success: (res) => {
         if (res.confirm) {
-          const winner = this.data.currentPlayer === 1 ? 2 : 1;
-          this.announceWinner(winner);
+          const winner = this.data.currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+          this.announceWinner(winner, 'Abandon');
         }
       }
     });
