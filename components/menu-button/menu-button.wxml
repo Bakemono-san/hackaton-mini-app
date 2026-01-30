@@ -1,0 +1,3 @@
+<button class="flex items-center justify-center gap-2 {{fontSize}} {{colorClass}} {{background}}" bind:tap="navigate">
+  <text>{{title}}</text>
+</button>

@@ -2,14 +2,15 @@
   "pages": [
     "pages/index/index",
     "pages/logs/logs",
-    "pages/jeu",
-    "pages/jeu/jeu"
+    "pages/rules/rules"
   ],
   "style": "v2",
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#fff",
-    "navigationBarTitleText": "TCSAS Mini Program",
+    "navigationBarTitleText": "jeu des 12 Pions Sénégalais",
     "navigationBarTextStyle": "black"
-  }
+  },
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents"
 }
