@@ -3,7 +3,7 @@
   <!-- Header avec bouton retour -->
   <view class="header">
     <view class="back-button" bindtap="onBack">
-      <image src="/images/back-icon.png" class="back-icon"></image>
+      <image src="/images/icones/retour.svg" class="back-icon"></image>
       <text>Retour</text>
     </view>
   </view>
@@ -11,7 +11,7 @@
   <view class="players-section">
     <view class="player-card player1 {{currentPlayer === 1 ? 'active' : ''}}">
       <view class="player-avatar">
-        <image src="/images/player1-avatar.png" class="avatar-img"></image>
+        <image src="/images/icones/eagle.svg" class="avatar-img"></image>
       </view>
       <view class="player-info">
         <text class="player-name">Joueur 1</text>
@@ -20,7 +20,7 @@
     </view>
     <view class="player-card player2 {{currentPlayer === 2 ? 'active' : ''}}">
       <view class="player-avatar">
-        <image src="/images/player2-avatar.png" class="avatar-img"></image>
+        <image src="/images/icones/lion.svg" class="avatar-img"></image>
       </view>
       <view class="player-info">
         <text class="player-name">Joueur 2</text>
@@ -43,7 +43,13 @@
   </view>
   <!-- Boutons d'action -->
   <view class="actions">
-    <button class="btn btn-abandon" bindtap="onAbandon">Abandonner</button>
-    <button class="btn btn-place" bindtap="onPlace">Sur Place</button>
+    <button class="btn btn-abandon" bindtap="onAbandon">
+      <image src="/images/icones/cancel.svg" class="back-icon"></image>
+      Abandonner
+    </button>
+    <button class="btn btn-place" bindtap="onPlace">
+      <image src="/images/icones/pause.png" class="back-icon"></image>
+      Sur Place
+    </button>
   </view>
 </view>

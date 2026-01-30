@@ -1,0 +1,21 @@
+.back-button {
+  background-color: #4A5568;
+  color: white;
+  padding: 20rpx 40rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  width: fit-content;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.back-button:active {
+  opacity: 0.8;
+}
+
+.button-icon {
+  width: 20px;
+  height: 20px;
+}

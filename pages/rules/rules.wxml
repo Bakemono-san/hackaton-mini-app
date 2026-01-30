@@ -1,10 +1,10 @@
 <view class="page p-4">
   <scroll-view scroll-y style="height: 100vh" class=" text-base">
+    <!-- Bouton retour -->
+    <menu-button title="Retour" icon="/images/icones/retour.svg" url="/pages/index/index" colorClass="text-brown" fontSize="text-base" background="bg-white border border-brown mb-4"></menu-button>
     <!-- Title -->
-    <view class="text-xl font-bold text-brown my-2 text-center"> {{title}} </view>
-    <view class="text-sm  mb-4 text-light-brown text-center"> {{description}} </view>
-
-
+    <view class="text-xl font-bold text-brown my-2 text-center">{{title}}</view>
+    <view class="text-sm  mb-4 text-light-brown text-center">{{description}}</view>
     <!-- Sections -->
     <block wx:for="{{sections}}" wx:for-item="section" wx:key="index">
       <view class=" p-4 rounded-lg mb-4 shadow {{section.heading === '⚠️ Règle Spéciale : SUR PLACE' ? 'bg-light-yellow border-yellow' : 'bg-white'}} flex flex-col gap-4">
@@ -13,30 +13,30 @@
           <view class="circle flex items-center justify-center">
             <text class="text-white">{{index + 1}}</text>
           </view>
-          <text class="text-brown"> {{section.heading}}</text>
+          <text class="text-brown">{{section.heading}}</text>
         </view>
-
         <!-- Simple content -->
         <block wx:if="{{section.content}}">
           <view wx:for="{{section.content}}" wx:for-item="line" wx:key="cindex">
-            <view class="text ml-2 {{line === 'Joueur 1 : Vert ⬤' ? 'text-green' : line === 'Joueur 2 : Rouge ⬤' ? 'text-red' : ''}}"> • {{line}} </view>
+            <view class="text ml-2 {{line === 'Joueur 1 : Vert ⬤' ? 'text-green' : line === 'Joueur 2 : Rouge ⬤' ? 'text-red' : ''}}">
+              • {{line}}
+            </view>
           </view>
         </block>
-
         <!-- Sub sections -->
         <block wx:if="{{section.subSections}}">
           <view wx:for="{{section.subSections}}" class="ml-2" wx:for-item="sub" wx:key="sindex">
-            <view class="font-bold mt-3 {{sub.title === 'Pions normaux ⬤' ? 'text-green' : 'text-light-brown'}}"> {{sub.title}} </view>
-
+            <view class="font-bold mt-3 {{sub.title === 'Pions normaux ⬤' ? 'text-green' : 'text-light-brown'}}">
+              {{sub.title}}
+            </view>
             <block wx:for="{{sub.items}}" wx:for-item="it" wx:key="iindex">
-              <view class="text ml-2"> • {{it}} </view>
+              <view class="text ml-2">• {{it}}</view>
             </block>
           </view>
         </block>
       </view>
     </block>
-
     <view class="text-brown text-center font-bold">🇸🇳 Bon jeu et que le meilleur gagne !</view>
-    <button class="w-full my-4 bg-green text-white">Commencer a jouer</button>
+    <menu-button title="Commencer a jouer" url="/pages/jeu/jeu" colorClass="text-white" fontSize="text-base" background="w-full my-4 bg-green"></menu-button>
   </scroll-view>
 </view>

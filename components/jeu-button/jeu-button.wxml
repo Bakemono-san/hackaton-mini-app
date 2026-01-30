@@ -1,0 +1,4 @@
+<view class="back-button {{colorClass}}" style="{{background ? 'background:' + background + ';' : ''}}{{color ? 'color:' + color + ';' : ''}}{{padding ? 'padding:' + padding + ';' : ''}}{{borderRadius ? 'border-radius:' + borderRadius + ';' : ''}}{{fontSize ? 'font-size:' + fontSize + ';' : ''}}{{width ? 'width:' + width + ';' : ''}}{{boxShadow ? 'box-shadow:' + boxShadow + ';' : ''}}" bindtap="navigate">
+    <image wx:if="{{icon}}" src="{{icon}}" class="button-icon"></image>
+    <text>{{title}}</text>
+</view>
