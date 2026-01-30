@@ -42,6 +42,10 @@
   background-color: #00000;
 }
 
+.bg-orange{
+  background-color: #B55409;
+}
+
 .text-brown {
   color: #78350f;
 }
@@ -60,6 +64,10 @@
 
 .text-red{
   color: #d02d2d
+}
+
+.text-light-orange{
+  color: #C08F45;
 }
 
 button{
@@ -185,4 +193,27 @@ button{
   height:42rpx;
   border-radius: 100%;
   background-color: #eab308;
+}
+
+.h-full{
+  height: 100vh;
+}
+
+.w-full{
+  width: 100%;
+}
+
+.logo{
+  padding: 12rpx 32rpx ;
+  border: 6rpx solid yellow;
+  border-radius: 64rpx;
+}
+
+.logo_img{
+  width: 200rpx;
+  height: 200rpx;
+}
+
+.logo-h{
+  height: 200rpx;
 }
