@@ -1,3 +1,4 @@
-<view> 
-<menu-button  background="{{item.bg}}" colorClass="{{item.color}}" url="{{item.url}}" icon="/images/logo.png" title="{{item.name}}" />
+<view>
+  <menu-button background="{{item.bg}}" colorClass="{{item.color}}" url="{{item.url}}" icon="/images/logo.png" title="{{item.name}}" />
+  <menu-button background="{{jeu.bg}}" colorClass="{{jeu.color}}" url="{{jeu.url}}" icon="/images/logo.png" title="{{jeu.name}}" />
 </view>

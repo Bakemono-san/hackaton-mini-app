@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/logs/logs",
-    "pages/rules/rules"
+    "pages/rules/rules",
+    "pages/jeu/jeu"
   ],
   "style": "v2",
   "window": {

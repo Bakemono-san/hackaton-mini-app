@@ -1,41 +1,49 @@
-<!-- connect4.wxml -->
+<!-- game.wxml -->
 <view class="container">
-  <!-- Section supérieure et boutons de joueur -->
-  <view class="header-section">
-    <button class="btn-retour" bindtap="handleReturn">
-      <image src="/chemin/vers/icone-fleche.png" class="icon-retour" />
-      Retour
-    </button>
-    
-    <view class="player-info player1">
-      <view class="avatar player1-bg"></view>
-      <text>Joueur 1</text>
-      <text class="remaining-pieces">8 pions restants</text>
-    </view>
-    
-    <view class="player-info player2">
-      <view class="avatar player2-bg"></view>
-      <text>Joueur 2</text>
-      <text class="remaining-pieces">8 pions restants</text>
+  <!-- Header avec bouton retour -->
+  <view class="header">
+    <view class="back-button" bindtap="onBack">
+      <image src="/images/back-icon.png" class="back-icon"></image>
+      <text>Retour</text>
     </view>
   </view>
-
-  <!-- Grille de jeu -->
-  <view class="game-board">
-    <!-- Remplacez ceci par une boucle (wx:for) pour générer dynamiquement les lignes et colonnes -->
-    <view wx:for="{{boardRows}}" wx:for-item="row" wx:key="index" class="board-row">
-      <view wx:for="{{row}}" wx:for-item="cell" wx:key="colIndex" class="board-cell" bindtap="handleCellTap" data-col="{{colIndex}}">
-        <!-- Contenu de la cellule (pion ou vide) -->
-        <view wx:if="{{cell === 1}}" class="token player1-token"></view>
-        <view wx:elif="{{cell === 2}}" class="token player2-token"></view>
-        <view wx:else class="token empty-cell"></view>
+  <!-- Section des joueurs -->
+  <view class="players-section">
+    <view class="player-card player1 {{currentPlayer === 1 ? 'active' : ''}}">
+      <view class="player-avatar">
+        <image src="/images/player1-avatar.png" class="avatar-img"></image>
+      </view>
+      <view class="player-info">
+        <text class="player-name">Joueur 1</text>
+        <text class="player-score">{{player1Score}} jetons restants</text>
+      </view>
+    </view>
+    <view class="player-card player2 {{currentPlayer === 2 ? 'active' : ''}}">
+      <view class="player-avatar">
+        <image src="/images/player2-avatar.png" class="avatar-img"></image>
+      </view>
+      <view class="player-info">
+        <text class="player-name">Joueur 2</text>
+        <text class="player-score">{{player2Score}} jetons restants</text>
       </view>
     </view>
   </view>
-
-  <!-- Boutons d'action inférieurs -->
-  <view class="footer-section">
-    <button class="btn-abandonner" bindtap="handleAbandon">Abandonner</button>
-    <button class="btn-surplace" bindtap="handleSurPlace">Sur Place.</button>
+  <!-- Plateau de jeu -->
+  <view class="game-board">
+    <view class="board-grid">
+      <view wx:for="{{board}}" wx:key="index" class="cell {{index % 2 === 0 ? 'pair' : 'impair'}}" bindtap="onCellTap" data-index="{{index}}">
+        <view wx:if="{{item === 1}}" class="token token-player1"></view>
+        <view wx:elif="{{item === 2}}" class="token token-player2"></view>
+        <view wx:elif="{{item === 3}}" class="token token-cross">
+          <view class="cross-line line1"></view>
+          <view class="cross-line line2"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <!-- Boutons d'action -->
+  <view class="actions">
+    <button class="btn btn-abandon" bindtap="onAbandon">Abandonner</button>
+    <button class="btn btn-place" bindtap="onPlace">Sur Place</button>
   </view>
 </view>
