@@ -1,0 +1,41 @@
+<!-- connect4.wxml -->
+<view class="container">
+  <!-- Section supérieure et boutons de joueur -->
+  <view class="header-section">
+    <button class="btn-retour" bindtap="handleReturn">
+      <image src="/chemin/vers/icone-fleche.png" class="icon-retour" />
+      Retour
+    </button>
+    
+    <view class="player-info player1">
+      <view class="avatar player1-bg"></view>
+      <text>Joueur 1</text>
+      <text class="remaining-pieces">8 pions restants</text>
+    </view>
+    
+    <view class="player-info player2">
+      <view class="avatar player2-bg"></view>
+      <text>Joueur 2</text>
+      <text class="remaining-pieces">8 pions restants</text>
+    </view>
+  </view>
+
+  <!-- Grille de jeu -->
+  <view class="game-board">
+    <!-- Remplacez ceci par une boucle (wx:for) pour générer dynamiquement les lignes et colonnes -->
+    <view wx:for="{{boardRows}}" wx:for-item="row" wx:key="index" class="board-row">
+      <view wx:for="{{row}}" wx:for-item="cell" wx:key="colIndex" class="board-cell" bindtap="handleCellTap" data-col="{{colIndex}}">
+        <!-- Contenu de la cellule (pion ou vide) -->
+        <view wx:if="{{cell === 1}}" class="token player1-token"></view>
+        <view wx:elif="{{cell === 2}}" class="token player2-token"></view>
+        <view wx:else class="token empty-cell"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Boutons d'action inférieurs -->
+  <view class="footer-section">
+    <button class="btn-abandonner" bindtap="handleAbandon">Abandonner</button>
+    <button class="btn-surplace" bindtap="handleSurPlace">Sur Place.</button>
+  </view>
+</view>
