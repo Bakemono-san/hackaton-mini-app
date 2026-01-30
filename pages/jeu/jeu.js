@@ -9,6 +9,8 @@ Page({
     currentPlayer: Game.PLAYER1, // Joueur actuel (1 ou 2)
     player1Score: 12, // Nombre de jetons restants
     player2Score: 12,
+    player1Points: 0, // Points du joueur 1 (pions capturés)
+    player2Points: 0, // Points du joueur 2 (pions capturés)
     selectedCell: null, // Cellule sélectionnée pour déplacement
     isSurPlaceAvailable: false, // Si le bouton SUR PLACE est visible
     
@@ -34,6 +36,8 @@ Page({
       currentPlayer: Game.PLAYER1,
       player1Score: scores.player1,
       player2Score: scores.player2,
+      player1Points: 0,
+      player2Points: 0,
       selectedCell: null,
       isSurPlaceAvailable: false,
       surPlaceInfo: null
@@ -84,7 +88,7 @@ Page({
   },
 
   moveToken(fromIndex, toIndex, validation) {
-    const { board, currentPlayer } = this.data;
+    const { board, currentPlayer, player1Points, player2Points } = this.data;
     
     // Stocker l'état de capture AVANT le mouvement (pour SUR PLACE)
     const previousCaptureState = this.captureStateBeforeMove;
@@ -100,6 +104,18 @@ Page({
     );
 
     const scores = Game.getScores(moveResult.newBoard);
+    
+    // Incrémenter les points si c'était une capture
+    let newPlayer1Points = player1Points;
+    let newPlayer2Points = player2Points;
+    
+    if (validation.isCapture) {
+      if (currentPlayer === Game.PLAYER1) {
+        newPlayer1Points++;
+      } else {
+        newPlayer2Points++;
+      }
+    }
     
     // Préparer l'état SUR PLACE pour le prochain joueur
     const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
@@ -124,6 +140,8 @@ Page({
       selectedCell: null,
       player1Score: scores.player1,
       player2Score: scores.player2,
+      player1Points: newPlayer1Points,
+      player2Points: newPlayer2Points,
       isSurPlaceAvailable: isSurPlaceAvailable,
       surPlaceInfo: surPlaceInfo
     });
@@ -141,13 +159,34 @@ Page({
 
   /**
    * Active la règle SUR PLACE
-   * - Annule le dernier coup non-capturant
-   * - Retire le premier pion qui pouvait capturer
+   * Si le bouton est cliqué alors qu'il n'est pas disponible, le joueur perd un point
    */
   onPlace() {
-    const { surPlaceInfo, board, currentPlayer } = this.data;
+    const { surPlaceInfo, board, currentPlayer, player1Points, player2Points } = this.data;
     
+    // Si le bouton SUR PLACE n'est pas disponible, le joueur perd un point (faux SUR PLACE)
     if (!surPlaceInfo) {
+      let newPlayer1Points = player1Points;
+      let newPlayer2Points = player2Points;
+      
+      if (currentPlayer === Game.PLAYER1) {
+        newPlayer1Points = Math.max(0, newPlayer1Points - 1);
+      } else {
+        newPlayer2Points = Math.max(0, newPlayer2Points - 1);
+      }
+      
+      this.setData({
+        player1Points: newPlayer1Points,
+        player2Points: newPlayer2Points
+      });
+      
+      // Notifier le retrait du point
+      wx.showToast({
+        title: '-1 point (SUR PLACE)',
+        icon: 'none',
+        duration: 1500
+      });
+      
       return;
     }
     

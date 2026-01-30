@@ -15,7 +15,7 @@
       </view>
       <view class="player-info">
         <text class="player-name">Joueur 1</text>
-        <text class="player-score">{{player1Score}} jetons restants</text>
+        <text class="player-score">{{player1Score}} jetons | {{player1Points}} pts</text>
       </view>
     </view>
     <view class="player-card player2 {{currentPlayer === 2 ? 'active' : ''}}">
@@ -24,7 +24,7 @@
       </view>
       <view class="player-info">
         <text class="player-name">Joueur 2</text>
-        <text class="player-score">{{player2Score}} jetons restants</text>
+        <text class="player-score">{{player2Score}} jetons | {{player2Points}} pts</text>
       </view>
     </view>
   </view>
