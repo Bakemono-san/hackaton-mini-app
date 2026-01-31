@@ -1,4 +1,5 @@
 <view class="container log-list">
+  <menu-button title="Retour" icon="/images/icones/retour.svg" url="/pages/index/index" colorClass="text-brown" fontSize="text-base" background="bg-white border border-brown mb-4"></menu-button>
   <block wx:for="{{logs}}" wx:for-item="log" wx:key="*this">
     <text class="log-item">{{index + 1}}. {{log}}</text>
   </block>

@@ -1,0 +1,5 @@
+{
+  "usingComponents": {
+    "jeu-button": "/components/jeu-button/jeu-button"
+  }
+}

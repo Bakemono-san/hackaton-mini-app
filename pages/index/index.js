@@ -6,6 +6,13 @@ Page({
       color: "text-white",
       url: "/pages/rules/rules",
       icon: ""
+    },
+    jeu: {
+      name: "Jouer",
+      bg: "bg-blue",
+      color: "text-white",
+      url: "/pages/jeu/jeu",
+      icon: ""
     }
   },
 
