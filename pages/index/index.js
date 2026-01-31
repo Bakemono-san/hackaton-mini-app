@@ -14,5 +14,13 @@ Page({
       url: "/pages/jeu/jeu",
       icon: ""
     }
+  },
+
+  onLoad() {
+    setTimeout(() => {
+      wx.navigateTo({
+        url: "/pages/home/home"
+      })
+    }, 1000) // 15 seconds
   }
 })

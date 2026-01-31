@@ -1,4 +1,7 @@
-<view>
-  <menu-button background="{{item.bg}}" colorClass="{{item.color}}" url="{{item.url}}" icon="/images/logo.png" title="{{item.name}}" />
-  <menu-button background="{{jeu.bg}}" colorClass="{{jeu.color}}" url="{{jeu.url}}" icon="/images/logo.png" title="{{jeu.name}}" />
+<view class="bg-orange h-full flex items-center justify-center">
+    <view class="logo flex flex-col items-center">
+        <image src="/images/img_logo_game.png" class="logo_img w-full rounded-xl"/>
+        <text class="text-light-orange">12 pions</text>
+        <view class="text-light-orange font-bold">Senegalais</view>
+    </view>
 </view>
