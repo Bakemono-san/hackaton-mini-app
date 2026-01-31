@@ -29,6 +29,10 @@ App({
     })
   },
   globalData: {
-    userInfo: null
+    userInfo: null,
+    players: [
+      {name: "Moussa"},
+      {name: "Papa"}
+    ]
   }
 })

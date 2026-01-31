@@ -139,6 +139,10 @@ button{
   gap: 16rpx;
 }
 
+.gap-1{
+  gap: 4rpx;
+}
+
 
 /* border & radius */
 
@@ -177,6 +181,11 @@ button{
 .pl-4 { padding-left: 32rpx; }
 .pr-4 { padding-right: 32rpx; }
 
+.py-2{padding: 16rpx 0rpx;}
+.px-2{padding: 0rpx 16rpx;}
+.py-4{padding: 32rpx 0rpx;}
+.px-4{padding: 0rpx 32rpx;}
+
 /* Margin */
 .m-2 { margin: 16rpx; }
 .m-4 { margin: 32rpx; }
@@ -203,6 +212,10 @@ button{
   width: 100%;
 }
 
+.w-fit{
+  width: fit-content;
+}
+
 .logo{
   padding: 12rpx 32rpx ;
   border: 6rpx solid yellow;
@@ -216,4 +229,54 @@ button{
 
 .logo-h{
   height: 200rpx;
+}
+
+
+.avatar{
+  padding: 24rpx;
+  border-radius: 9999rpx;
+  width: 64rpx;
+  height: 64rpx;
+}
+
+input{
+  border: 4rpx solid gray;
+  border-radius: 16rpx;
+  padding: 6rpx 12rpx; 
+}
+
+.border-green{
+  border: 6rpx solid #15803d;
+}
+
+.border-red{
+  border: 6rpx solid #d02d2d;
+}
+
+.header {
+  width: 100%;
+  margin-bottom: 30rpx;
+}
+
+.back-button {
+  background-color: #4A5568;
+  color: white;
+  padding: 20rpx 40rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  width: fit-content;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.15);
+}
+
+.back-icon {
+  width: 32rpx;
+  height: 32rpx;
+}
+
+.icon{
+  width: 32rpx;
+  height: 32rpx;
 }
