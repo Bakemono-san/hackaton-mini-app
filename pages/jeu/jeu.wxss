@@ -266,6 +266,11 @@
   box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
 }
 
+/* Style de sélection - bordure uniquement (pas de surbrillance) */
+.token.selected {
+  box-shadow: 0 0 0 6rpx #2D3748, 0 4rpx 8rpx rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Boutons d'action */
 .actions {
  

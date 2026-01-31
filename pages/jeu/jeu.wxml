@@ -32,10 +32,10 @@
   <view class="game-board">
     <view class="board-grid">
       <view wx:for="{{board}}" wx:key="index" class="cell {{index % 2 === 0 ? 'pair' : 'impair'}}" bindtap="onCellTap" data-index="{{index}}">
-        <view wx:if="{{item === 1}}" class="token token-player1"></view>
-        <view wx:elif="{{item === 2}}" class="token token-player2"></view>
-        <view wx:elif="{{item === 4}}" class="token token-dame token-dame1"></view>
-        <view wx:elif="{{item === 5}}" class="token token-dame token-dame2"></view>
+        <view wx:if="{{item === 1}}" class="token token-player1 {{selectedCell === index ? 'selected' : ''}}"></view>
+        <view wx:elif="{{item === 2}}" class="token token-player2 {{selectedCell === index ? 'selected' : ''}}"></view>
+        <view wx:elif="{{item === 4}}" class="token token-dame token-dame1 {{selectedCell === index ? 'selected' : ''}}"></view>
+        <view wx:elif="{{item === 5}}" class="token token-dame token-dame2 {{selectedCell === index ? 'selected' : ''}}"></view>
       </view>
     </view>
   </view>
