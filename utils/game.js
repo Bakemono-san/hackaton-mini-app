@@ -935,20 +935,26 @@ function makeMove(board, fromIndex, toIndex, player, isCapture, capturedIndex) {
 }
 
 /**
- * Annule un coup (pour la règle SUR PLACE)
- * @param {number} board - Plateau de jeu actuel
- * @param {number} fromIndex - Position de départ
- * @param {number} toIndex - Position d'arrivée
- * @param {number} player - Joueur qui a joué
- * @returns {number} - Plateau avec le pion retiré (pour SUR PLACE)
+ * Annule un coup et retire le pion fautif (pour la règle SUR PLACE)
+ * 
+ * RÈGLE SUR PLACE :
+ * 1. Le déplacement du pion fautif est annulé (retour à l'état précédent)
+ * 2. Le pion fautif est retiré définitivement du jeu
+ * 3. Le score du joueur qui annonce SUR PLACE augmente de +1
+ * 
+ * @param {number[]} previousBoard - Plateau à l'état précédant le déplacement
+ * @param {number} fromIndex - Position de départ du pion fautif
+ * @param {number} player - Joueur du pion fautif
+ * @returns {number[]} - Plateau avec le pion retiré
  */
-function surPlace(board, fromIndex, toIndex, player) {
-  const newBoard = [...board];
+function surPlace(previousBoard, fromIndex, player) {
+  const newBoard = [...previousBoard];
   
-  // Le pion est retiré du jeu
-  newBoard[fromIndex] = EMPTY;
-  // La case d'arrivée reste vide (le coup est annulé)
-  newBoard[toIndex] = EMPTY;
+  // Retirer le pion fautif de sa position de départ
+  // Le pion est complètement retiré du jeu (case devient vide)
+  if (isPlayerPiece(newBoard[fromIndex], player)) {
+    newBoard[fromIndex] = EMPTY;
+  }
   
   return newBoard;
 }

@@ -3,7 +3,7 @@
     "pages/index/index",
     "pages/logs/logs",
     "pages/rules/rules",
-    "pages/jeu/jeu"
+    "pages/jeu/jeu",
     "pages/home/home"
   ],
   "style": "v2",

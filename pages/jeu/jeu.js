@@ -190,17 +190,49 @@ Page({
       return;
     }
     
-    // Créer une copie du plateau
-    const newBoard = [...board];
+    // RÈGLE SUR PLACE :
+    // Le pion fautif et le pion déplacé sont DEUX pions distincts
+    // 
+    // 1. Pion fautif : pion du joueur précédent qui avait une capture possible mais n'a pas capturé
+    //    CE pion doit être retiré définitivement du jeu
+    // 
+    // 2. Pion déplacé : pion qui a été déplacé au tour précédent
+    //    CE pion doit être remis à sa position initiale (pas retiré)
     
-    // Retirer le premier pion qui pouvait capturer (pas le dernier mouvement)
-    // car le pion qui aurait dû capturer est celui de l'adversaire au tour précédent
-    const firstCapturingPiece = surPlaceInfo.capturingPieces[0];
-    if (firstCapturingPiece !== undefined && Game.isPlayerPiece(newBoard[firstCapturingPiece], surPlaceInfo.lastMovePlayer)) {
-      newBoard[firstCapturingPiece] = Game.EMPTY;
+    // Créer une copie du plateau actuel
+    let newBoard = [...board];
+    
+    // ÉTAPE 1 : Retirer UNIQUEMENT le pion fautif
+    // Le pion fautif est le premier pion de la liste capturingPieces
+    const faultPieceIndex = surPlaceInfo.capturingPieces[0];
+    if (faultPieceIndex !== undefined) {
+      newBoard[faultPieceIndex] = Game.EMPTY;
     }
     
+    // ÉTAPE 2 : Annuler le déplacement du pion déplacé
+    // Le remettre exactement à sa position initiale
+    const movedPieceValue = newBoard[surPlaceInfo.lastToIndex];
+    newBoard[surPlaceInfo.lastToIndex] = Game.EMPTY;
+    newBoard[surPlaceInfo.lastFromIndex] = movedPieceValue;
+    
     const scores = Game.getScores(newBoard);
+    
+    // ÉTAPE 3 : Ajouter +1 au score du joueur actuel
+    let newPlayer1Points = player1Points;
+    let newPlayer2Points = player2Points;
+    
+    if (currentPlayer === Game.PLAYER1) {
+      newPlayer1Points++;
+    } else {
+      newPlayer2Points++;
+    }
+    
+    // Notifier le succès du SUR PLACE
+    wx.showToast({
+      title: 'SUR PLACE ! +1 point',
+      icon: 'success',
+      duration: 1500
+    });
     
     // Cacher le bouton et réinitialiser l'état
     this.setData({
@@ -209,14 +241,15 @@ Page({
       isSurPlaceAvailable: false,
       surPlaceInfo: null,
       player1Score: scores.player1,
-      player2Score: scores.player2
+      player2Score: scores.player2,
+      player1Points: newPlayer1Points,
+      player2Points: newPlayer2Points
     });
     
     // Vérifier l'état du jeu après le retrait du pion
     this.checkGameState();
     
-    // Le tour continue avec le même joueur (l'adversaire qui a annoncé SUR PLACE)
-    // Préparer l'état de capture pour le prochain joueur (le joueur qui vient de jouer)
+    // Préparer l'état de capture pour le prochain joueur
     const nextPlayer = surPlaceInfo.lastMovePlayer;
     const nextCaptureState = Game.createCaptureState(newBoard, nextPlayer);
     this.captureStateBeforeMove = nextCaptureState;
