@@ -545,15 +545,17 @@ Page({
   },
 
   announceWinner(player, reason = '') {
-    const message = reason ? `Joueur ${player} a gagné! (${reason})` : `Joueur ${player} a gagné!`;
+    // Arrêter tout timer en cours
+    if (this.captureTimer) {
+      clearInterval(this.captureTimer);
+      this.captureTimer = null;
+    }
     
-    wx.showModal({
-      title: 'Victoire!',
-      content: message,
-      showCancel: false,
-      success: () => {
-        this.initGame();
-      }
+    const { player1Points, player2Points } = this.data;
+    
+    // Naviguer vers la page victoire avec les informations
+    wx.navigateTo({
+      url: `/pages/victoire/victoire?winner=${player}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}`
     });
   },
 
