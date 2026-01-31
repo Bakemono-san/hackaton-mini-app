@@ -1,7 +1,7 @@
 <view class="page p-4">
   <scroll-view scroll-y style="height: 100vh" class=" text-base">
     <!-- Bouton retour -->
-    <menu-button title="Retour" icon="/images/icones/retour.svg" url="/pages/index/index" colorClass="text-brown" fontSize="text-base" background="bg-white border border-brown mb-4"></menu-button>
+    <menu-button title="Retour" icon="/images/icones/retour.svg" url="/pages/home/home" colorClass="text-brown" fontSize="text-base" background="bg-white border border-brown mb-4"></menu-button>
     <!-- Title -->
     <view class="text-xl font-bold text-brown my-2 text-center">{{title}}</view>
     <view class="text-sm  mb-4 text-light-brown text-center">{{description}}</view>
