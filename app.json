@@ -2,7 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/logs/logs",
-    "pages/rules/rules"
+    "pages/rules/rules",
+    "pages/home/home"
   ],
   "style": "v2",
   "window": {
