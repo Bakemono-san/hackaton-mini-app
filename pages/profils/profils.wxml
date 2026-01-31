@@ -1,4 +1,4 @@
-<view class="page h-full flex flex-col px-4 items-center justify-center gap-4">
+<view class="page h-full flex flex-col p-4 items-center  gap-4">
     <view class="header">
         <view class="back-button" bindtap="onBack">
             <image src="/images/icones/retour.svg" class="back-icon"></image>
