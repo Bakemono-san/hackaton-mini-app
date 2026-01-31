@@ -792,24 +792,43 @@ function countPlayerPieces(board, player) {
 
 /**
  * Transforme un pion en dame
- * @param {number} board - Plateau de jeu (copie)
+ * 
+ * ⚠️ CRITIQUE - RÈGLES DE PROMOTION :
+ * - NE SUPPRIME JAMAIS le pion du plateau
+ * - NE MODIFIE PAS sa position
+ * - NE MODIFIE PAS le score
+ * 
+ * La promotion consiste UNIQUEMENT à :
+ * - Changer le type du pion : PLAYER → DAME
+ * - Conserver le même index (position inchangée)
+ * 
+ * @param {number[]} board - Plateau de jeu (copie)
  * @param {number} index - Index du pion à promouvoir
  * @param {number} player - Joueur du pion
- * @returns {number} - Nouveau plateau avec la promotion
+ * @returns {number[]} - Nouveau plateau avec la promotion appliquée
  */
 function promotePiece(board, index, player) {
+  // CRITICAL: Always create a copy to avoid mutating the original board
   const newBoard = [...board];
+  
+  // CRITICAL: Only change the piece type, keep the same position
   if (player === PLAYER1) {
-    newBoard[index] = DAME1;
+    newBoard[index] = DAME1; // PLAYER1 → DAME1
   } else {
-    newBoard[index] = DAME2;
+    newBoard[index] = DAME2; // PLAYER2 → DAME2
   }
+  
+  // CRITICAL: Do NOT set newBoard[index] to EMPTY - that would remove the piece!
+  // CRITICAL: Do NOT call any function that modifies position
+  // CRITICAL: Do NOT modify score - it's calculated separately
+  
   return newBoard;
 }
 
 /**
  * Vérifie et applique les promotions nécessaires après un mouvement
- * @param {number} board - Plateau de jeu
+ * 
+ * @param {number[]} board - Plateau de jeu
  * @param {number} lastMoveIndex - Index de la case où le pion a atterri
  * @param {number} player - Joueur qui a joué
  * @returns {object} - {board, promoted}
@@ -817,13 +836,30 @@ function promotePiece(board, index, player) {
 function checkPromotion(board, lastMoveIndex, player) {
   const cellValue = board[lastMoveIndex];
   
-  // Ne promouvoir que les pions normaux
+  // Ne promouvoir que les pions normaux (pas les dames ni les cases vides)
   if (cellValue !== PLAYER1 && cellValue !== PLAYER2) {
     return { board, promoted: false };
   }
 
   if (shouldPromote(lastMoveIndex, player, board)) {
+    // CRITICAL: Verify that the piece exists before promotion
+    if (board[lastMoveIndex] !== cellValue) {
+      // Safety check: piece was modified, don't promote
+      console.error('Promotion error: piece value changed unexpectedly');
+      return { board, promoted: false };
+    }
+    
+    // CRITICAL: Call promotePiece which preserves position and doesn't remove the piece
     const newBoard = promotePiece(board, lastMoveIndex, player);
+    
+    // CRITICAL: Verify the piece is still on the board after promotion
+    if (newBoard[lastMoveIndex] === EMPTY) {
+      console.error('Promotion error: piece was removed from the board!');
+      // Restore the piece
+      newBoard[lastMoveIndex] = cellValue;
+      return { board: newBoard, promoted: false };
+    }
+    
     return { board: newBoard, promoted: true };
   }
 
@@ -903,27 +939,33 @@ function canMoveFrom(index, board, player) {
 
 /**
  * Effectue un mouvement sur le plateau
- * @param {number} board - Plateau de jeu actuel
+ * 
+ * @param {number[]} board - Plateau de jeu actuel
  * @param {number} fromIndex - Position de départ
  * @param {number} toIndex - Position d'arrivée
  * @param {number} player - Joueur qui joue
  * @param {boolean} isCapture - Si c'est une capture
  * @param {number} capturedIndex - Index du pion capturé (si capture)
- * @returns {object} - {newBoard, promoted}
+ * @returns {object} - {newBoard, promoted, isCapture, capturedIndex}
  */
 function makeMove(board, fromIndex, toIndex, player, isCapture, capturedIndex) {
+  // CRITICAL: Always create a copy to avoid mutating the original board
   const newBoard = [...board];
   
-  // Déplacer le pion
+  // Step 1: Move the piece (NOT remove it!)
+  // CRITICAL: Set source to EMPTY, but keep the piece alive at destination
   newBoard[fromIndex] = EMPTY;
-  newBoard[toIndex] = board[fromIndex];
-
-  // Enlever le pion capturé si c'est une capture
+  newBoard[toIndex] = board[fromIndex]; // The piece arrives at destination
+  
+  // Step 2: Remove captured piece if this is a capture
+  // CRITICAL: This is the ONLY time we set a piece to EMPTY (for captures)
   if (isCapture && capturedIndex !== undefined) {
     newBoard[capturedIndex] = EMPTY;
   }
-
-  // Vérifier et appliquer la promotion
+  
+  // Step 3: Check and apply promotion
+  // CRITICAL: Promotion does NOT remove or move the piece
+  // It only changes the piece type from PLAYER to DAME
   const promotionResult = checkPromotion(newBoard, toIndex, player);
 
   return {
@@ -935,20 +977,26 @@ function makeMove(board, fromIndex, toIndex, player, isCapture, capturedIndex) {
 }
 
 /**
- * Annule un coup (pour la règle SUR PLACE)
- * @param {number} board - Plateau de jeu actuel
- * @param {number} fromIndex - Position de départ
- * @param {number} toIndex - Position d'arrivée
- * @param {number} player - Joueur qui a joué
- * @returns {number} - Plateau avec le pion retiré (pour SUR PLACE)
+ * Annule un coup et retire le pion fautif (pour la règle SUR PLACE)
+ * 
+ * RÈGLE SUR PLACE :
+ * 1. Le déplacement du pion fautif est annulé (retour à l'état précédent)
+ * 2. Le pion fautif est retiré définitivement du jeu
+ * 3. Le score du joueur qui annonce SUR PLACE augmente de +1
+ * 
+ * @param {number[]} previousBoard - Plateau à l'état précédant le déplacement
+ * @param {number} fromIndex - Position de départ du pion fautif
+ * @param {number} player - Joueur du pion fautif
+ * @returns {number[]} - Plateau avec le pion retiré
  */
-function surPlace(board, fromIndex, toIndex, player) {
-  const newBoard = [...board];
+function surPlace(previousBoard, fromIndex, player) {
+  const newBoard = [...previousBoard];
   
-  // Le pion est retiré du jeu
-  newBoard[fromIndex] = EMPTY;
-  // La case d'arrivée reste vide (le coup est annulé)
-  newBoard[toIndex] = EMPTY;
+  // Retirer le pion fautif de sa position de départ
+  // Le pion est complètement retiré du jeu (case devient vide)
+  if (isPlayerPiece(newBoard[fromIndex], player)) {
+    newBoard[fromIndex] = EMPTY;
+  }
   
   return newBoard;
 }

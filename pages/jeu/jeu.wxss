@@ -217,6 +217,60 @@
   transform: translate(-50%, -50%);
 }
 
+/* Styles des Dames (pions promus) */
+/* Les dames ont un centre JAUNE (or) distinctif */
+/* La bordure de la dame correspond à la couleur de son pion d'origine */
+.token-dame {
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  box-shadow: 0 6rpx 12rpx rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* Dame du joueur 1 (pion vert) - Centre jaune avec bordure VERT */
+.token-dame1 {
+  background: radial-gradient(circle at 30% 30%, #FCD34D, #F59E0B);
+  border: 6rpx solid #48BB78;
+}
+
+.token-dame1::after {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #FEF3C7, #FCD34D);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+}
+
+/* Dame du joueur 2 (pion rouge) - Centre jaune avec bordure ROUGE */
+.token-dame2 {
+  background: radial-gradient(circle at 30% 30%, #FCD34D, #F59E0B);
+  border: 6rpx solid #F56565;
+}
+
+.token-dame2::after {
+  content: '';
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #FEF3C7, #FCD34D);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+}
+
+/* Style de sélection - bordure uniquement (pas de surbrillance) */
+.token.selected {
+  box-shadow: 0 0 0 6rpx #2D3748, 0 4rpx 8rpx rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Boutons d'action */
 .actions {
  

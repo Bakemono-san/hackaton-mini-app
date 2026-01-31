@@ -1,0 +1,33 @@
+<!-- victoire.wxml -->
+<view class="container">
+    <!-- Écran de victoire -->
+    <view class="victory-overlay">
+        <view class="victory-modal">
+            <view class="victory-header">
+                <text class="victory-title">VICTOIRE 👑</text>
+            </view>
+            <view class="winner-avatar">
+                <view class="winner-circle {{winner === 1 ? 'winner-player1' : 'winner-player2'}}">
+                    <view class="winner-icon">{{winner === 1 ? '🦁' : '🦅'}}</view>
+                </view>
+            </view>
+            <text class="winner-text">{{winnerName}} a gagné !</text>
+            <text wx:if="{{reason}}" class="victory-reason">{{reason}}</text>
+            <view class="score-display">
+                <view class="score-item score-player1">
+                    <text class="score-label">🦁 Joueur 1</text>
+                    <text class="score-value">{{player1Points}} pts</text>
+                </view>
+                <text class="score-separator">⚔️</text>
+                <view class="score-item score-player2">
+                    <text class="score-label">🦅 Joueur 2</text>
+                    <text class="score-value">{{player2Points}} pts</text>
+                </view>
+            </view>
+            <view class="victory-actions">
+                <button class="victory-btn btn-replay" bindtap="onReplay">🔄 Rejouer</button>
+                <button class="victory-btn btn-home" bindtap="onHome">🏠 Accueil</button>
+            </view>
+        </view>
+    </view>
+</view>

@@ -3,6 +3,9 @@
 const Game = require('../../utils/game.js');
 const app = getApp()
 
+// Constante pour la fenêtre de validation des captures multiples (en millisecondes)
+const CAPTURE_WINDOW_MS = 3000;
+
 Page({
   data: {
     players: [],
@@ -18,6 +21,11 @@ Page({
     
     // État interne pour la règle SUR PLACE
     surPlaceInfo: null, // { previousBoard, capturingPieces, lastMovePlayer }
+    
+    // État pour les captures multiples avec fenêtre temporelle
+    pendingCaptureIndex: null, // Index du pion qui peut continuer à capturer
+    captureWindowActive: false, // Si la fenêtre de validation de 3 secondes est active
+    captureTimeRemaining: 0, // Temps restant dans la fenêtre (en secondes)
   },
 
   onLoad(options) {
@@ -29,6 +37,12 @@ Page({
   },
 
   initGame() {
+    // Annuler tout timer de capture en cours
+    if (this.captureTimer) {
+      clearInterval(this.captureTimer);
+      this.captureTimer = null;
+    }
+    
     // Initialiser le plateau avec la configuration de départ
     const board = Game.initBoard();
     const scores = Game.getScores(board);
@@ -45,7 +59,10 @@ Page({
       player2Points: 0,
       selectedCell: null,
       isSurPlaceAvailable: false,
-      surPlaceInfo: null
+      surPlaceInfo: null,
+      pendingCaptureIndex: null,
+      captureWindowActive: false,
+      captureTimeRemaining: 0
     });
     
     // Stocker l'état de capture en mémoire interne
@@ -54,30 +71,126 @@ Page({
 
   onCellTap(e) {
     const index = e.currentTarget.dataset.index;
-    const { board, currentPlayer, selectedCell } = this.data;
+    const { board, currentPlayer, selectedCell, pendingCaptureIndex, captureWindowActive } = this.data;
     
-    // Mode mouvement
-    if (selectedCell === null) {
-      // Sélectionner un jeton à déplacer
-      if (Game.isPlayerPiece(board[index], currentPlayer)) {
-        this.selectToken(index);
-      }
-    } else {
-      // Déplacer le jeton sélectionné
-      if (index === selectedCell) {
-        // Désélectionner si on clique sur le même jeton
+    // Vérifier si le joueur clique sur le même pion sélectionné (pour terminer le tour)
+    if (index === selectedCell) {
+      // Cliquer sur le même pion le désélectionne et termine le tour
+      if (pendingCaptureIndex !== null) {
+        this.stopCaptureWindow();
+        this.endTurnAfterCapture();
+      } else {
         this.deselectToken();
-      } else if (board[index] === Game.EMPTY) {
-        // Essayer de déplacer vers une case vide
-        const validation = Game.validateMove(selectedCell, index, board, currentPlayer);
-        if (validation.valid) {
-          this.moveToken(selectedCell, index, validation);
+      }
+      return;
+    }
+    
+    // En mode fenêtre de capture active, vérifier si le clic est valide
+    if (captureWindowActive && pendingCaptureIndex !== null) {
+      // La fenêtre de capture est active - seul un clic sur une case de capture valide est accepté
+      if (board[index] === Game.EMPTY) {
+        // Vérifier si c'est une capture valide avec le pion en position pendingCaptureIndex
+        const validation = Game.validateMove(pendingCaptureIndex, index, board, currentPlayer);
+        
+        if (validation.valid && validation.isCapture) {
+          // Capture valide - exécuter et redémarrer la fenêtre
+          this.moveToken(pendingCaptureIndex, index, validation);
+          return;
+        } else {
+          // Clic invalide - terminer la chaîne de capture immédiatement
+          // REFUS SILENCIEUX - pas de message d'erreur
+          this.stopCaptureWindow();
+          this.endTurnAfterCapture();
+          return;
         }
-      } else if (Game.isPlayerPiece(board[index], currentPlayer)) {
-        // Sélectionner un autre jeton
-        this.selectToken(index);
+      } else {
+        // Clic sur une case non vide - terminer la chaîne de capture
+        this.stopCaptureWindow();
+        this.endTurnAfterCapture();
+        return;
       }
     }
+    
+    // Vérifier si la case cliquée contient un pion du joueur actuel
+    const isOwnPiece = Game.isPlayerPiece(board[index], currentPlayer);
+    
+    // Si on clique sur un de ses propres pions
+    if (isOwnPiece) {
+      // Sélectionner le nouveau pion
+      this.selectToken(index);
+      return;
+    }
+    
+    // Si aucun pion n'est sélectionné et on clique sur une case vide
+    if (selectedCell === null) {
+      // Ne rien faire - pas de pion sélectionné
+      return;
+    }
+    
+    // Un pion est sélectionné, vérifier si le clic est sur une case vide
+    if (board[index] === Game.EMPTY) {
+      // Essayer de déplacer vers une case vide
+      const validation = Game.validateMove(selectedCell, index, board, currentPlayer);
+      
+      if (validation.valid) {
+        // Le coup est valide, l'exécuter
+        this.moveToken(selectedCell, index, validation);
+      } else {
+        // Coup non valide - REFUS SILENCIEUX
+        return;
+      }
+    } else {
+      // La case contient un pion adverse - REFUS SILENCIEUX
+      return;
+    }
+  },
+
+  /**
+   * Termine le tour du joueur actuel et passe au joueur suivant
+   * Utilisé après une capture multiple quand le joueur veut finir son tour
+   */
+  endTurn() {
+    const { board, currentPlayer, player1Points, player2Points } = this.data;
+    const scores = Game.getScores(board);
+    
+    const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+    
+    // Vérifier si le bouton SUR PLACE doit apparaître pour l'adversaire
+    const previousCaptureState = this.captureStateBeforeMove;
+    let newSurPlaceInfo = null;
+    let newIsSurPlaceAvailable = false;
+    
+    if (previousCaptureState.capturingPieces.length > 0) {
+      newSurPlaceInfo = {
+        previousBoard: previousCaptureState.board,
+        capturingPieces: previousCaptureState.capturingPieces,
+        lastMovePlayer: null,
+        lastFromIndex: null,
+        lastToIndex: null
+      };
+      newIsSurPlaceAvailable = true;
+    }
+    
+    // Préparer l'état de capture pour le prochain joueur
+    const nextCaptureState = Game.createCaptureState(board, opponent);
+    this.captureStateBeforeMove = nextCaptureState;
+    
+    // Vérifier l'état du jeu pour le prochain joueur
+    const gameOver = Game.checkGameOver(board, opponent);
+    
+    if (gameOver.gameOver) {
+      this.announceWinner(gameOver.winner, gameOver.reason);
+      return;
+    }
+    
+    // Passer au joueur suivant
+    this.setData({
+      selectedCell: null,
+      pendingCaptureIndex: null,
+      currentPlayer: opponent,
+      isSurPlaceAvailable: newIsSurPlaceAvailable,
+      surPlaceInfo: newSurPlaceInfo
+    });
   },
 
   selectToken(index) {
@@ -89,6 +202,115 @@ Page({
   deselectToken() {
     this.setData({
       selectedCell: null
+    });
+  },
+
+  /**
+   * Démarre la fenêtre de validation de 3 secondes pour les captures multiples
+   * Chaque nouvelle capture réinitialise le timer
+   */
+  startCaptureWindow() {
+    // Arrêter tout timer existant
+    this.stopCaptureWindow();
+    
+    let timeLeft = CAPTURE_WINDOW_MS / 1000;
+    
+    this.setData({
+      captureWindowActive: true,
+      captureTimeRemaining: timeLeft
+    });
+    
+    // Mettre à jour le timer chaque seconde
+    this.captureTimer = setInterval(() => {
+      timeLeft--;
+      
+      if (timeLeft <= 0) {
+        // Le temps est écoulé - terminer la chaîne de capture
+        this.stopCaptureWindow();
+        this.onCaptureWindowExpired();
+      } else {
+        this.setData({
+          captureTimeRemaining: timeLeft
+        });
+      }
+    }, 1000);
+  },
+
+  /**
+   * Arrête la fenêtre de validation des captures
+   */
+  stopCaptureWindow() {
+    if (this.captureTimer) {
+      clearInterval(this.captureTimer);
+      this.captureTimer = null;
+    }
+    this.setData({
+      captureWindowActive: false,
+      captureTimeRemaining: 0
+    });
+  },
+
+  /**
+   * Appelé quand la fenêtre de capture expire
+   * Termine le tour du joueur
+   */
+  onCaptureWindowExpired() {
+    // La fenêtre de capture a expiré - terminer le tour
+    // Le pion est désélectionné et on passe au joueur suivant
+    this.endTurnAfterCapture();
+  },
+
+  /**
+   * Termine le tour après une chaîne de capture (temps expiré ou clic invalide)
+   */
+  endTurnAfterCapture() {
+    const { board, currentPlayer, player1Points, player2Points } = this.data;
+    const scores = Game.getScores(board);
+    
+    const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+    
+    // Vérifier si le bouton SUR PLACE doit apparaître pour l'adversaire
+    const previousCaptureState = this.captureStateBeforeMove;
+    let newSurPlaceInfo = null;
+    let newIsSurPlaceAvailable = false;
+    
+    if (previousCaptureState.capturingPieces.length > 0) {
+      newSurPlaceInfo = {
+        previousBoard: previousCaptureState.board,
+        capturingPieces: previousCaptureState.capturingPieces,
+        lastMovePlayer: null,
+        lastFromIndex: null,
+        lastToIndex: null
+      };
+      newIsSurPlaceAvailable = true;
+    }
+    
+    // Préparer l'état de capture pour le prochain joueur
+    const nextCaptureState = Game.createCaptureState(board, opponent);
+    this.captureStateBeforeMove = nextCaptureState;
+    
+    // Vérifier l'état du jeu pour le prochain joueur
+    const gameOver = Game.checkGameOver(board, opponent);
+    
+    if (gameOver.gameOver) {
+      this.announceWinner(gameOver.winner, gameOver.reason);
+      return;
+    }
+    
+    // Passer au joueur suivant
+    this.setData({
+      board: board,
+      selectedCell: null,
+      pendingCaptureIndex: null,
+      captureWindowActive: false,
+      captureTimeRemaining: 0,
+      currentPlayer: opponent,
+      player1Score: scores.player1,
+      player2Score: scores.player2,
+      player1Points: player1Points,
+      player2Points: player2Points,
+      isSurPlaceAvailable: newIsSurPlaceAvailable,
+      surPlaceInfo: newSurPlaceInfo
     });
   },
 
@@ -122,44 +344,83 @@ Page({
       }
     }
     
-    // Préparer l'état SUR PLACE pour le prochain joueur
-    const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
-    let surPlaceInfo = null;
-    let isSurPlaceAvailable = false;
+    let newPendingCaptureIndex = null;
+    let newSelectedCell = null;
+    let newIsSurPlaceAvailable = false;
+    let newSurPlaceInfo = null;
     
-    // Vérifier si le bouton SUR PLACE doit apparaître
-    // Condition: l'adversaire (joueur actuel) avait des captures possibles et n'a pas capturé
-    if (!validation.isCapture && previousCaptureState.capturingPieces.length > 0) {
-      surPlaceInfo = {
-        previousBoard: previousCaptureState.board,
-        capturingPieces: previousCaptureState.capturingPieces,
-        lastMovePlayer: currentPlayer,
-        lastFromIndex: fromIndex,
-        lastToIndex: toIndex
-      };
-      isSurPlaceAvailable = true;
+    if (validation.isCapture) {
+      // C'était une capture - démarrer la fenêtre de validation de 3 secondes
+      newPendingCaptureIndex = toIndex;
+      newSelectedCell = toIndex;
+      
+      // Démarrer la fenêtre de capture (sera réinitialisée à chaque capture)
+      this.startCaptureWindow();
+    } else {
+      // Pas une capture - préparer l'état SUR PLACE pour le prochain joueur
+      const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+      
+      // Vérifier si le bouton SUR PLACE doit apparaître
+      if (previousCaptureState.capturingPieces.length > 0) {
+        newSurPlaceInfo = {
+          previousBoard: previousCaptureState.board,
+          capturingPieces: previousCaptureState.capturingPieces,
+          lastMovePlayer: currentPlayer,
+          lastFromIndex: fromIndex,
+          lastToIndex: toIndex
+        };
+        newIsSurPlaceAvailable = true;
+      }
+      
+      // Terminer le tour - passer au joueur suivant
+      const opponentToPlay = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+      
+      // Préparer l'état de capture pour le prochain joueur
+      const nextCaptureState = Game.createCaptureState(moveResult.newBoard, opponentToPlay);
+      this.captureStateBeforeMove = nextCaptureState;
+      
+      // Vérifier l'état du jeu pour le prochain joueur
+      const gameOver = Game.checkGameOver(moveResult.newBoard, opponentToPlay);
+      
+      if (gameOver.gameOver) {
+        this.announceWinner(gameOver.winner, gameOver.reason);
+      }
+      
+      // Passer au joueur suivant
+      this.setData({
+        board: moveResult.newBoard,
+        selectedCell: null,
+        pendingCaptureIndex: null,
+        captureWindowActive: false,
+        captureTimeRemaining: 0,
+        player1Score: scores.player1,
+        player2Score: scores.player2,
+        player1Points: newPlayer1Points,
+        player2Points: newPlayer2Points,
+        currentPlayer: opponentToPlay,
+        isSurPlaceAvailable: newIsSurPlaceAvailable,
+        surPlaceInfo: newSurPlaceInfo
+      });
+      
+      return;
     }
     
+    // Si c'est une capture, mettre à jour l'état
     this.setData({
       board: moveResult.newBoard,
-      selectedCell: null,
+      selectedCell: newSelectedCell,
+      pendingCaptureIndex: newPendingCaptureIndex,
       player1Score: scores.player1,
       player2Score: scores.player2,
       player1Points: newPlayer1Points,
       player2Points: newPlayer2Points,
-      isSurPlaceAvailable: isSurPlaceAvailable,
-      surPlaceInfo: surPlaceInfo
+      isSurPlaceAvailable: newIsSurPlaceAvailable,
+      surPlaceInfo: newSurPlaceInfo
     });
     
-    // Préparer l'état de capture pour le prochain joueur
-    const nextCaptureState = Game.createCaptureState(moveResult.newBoard, opponent);
+    // Mettre à jour l'état de capture pour le prochain mouvement potentiel
+    const nextCaptureState = Game.createCaptureState(moveResult.newBoard, currentPlayer);
     this.captureStateBeforeMove = nextCaptureState;
-    
-    // Vérifier l'état du jeu
-    this.checkGameState();
-    
-    // Passer au joueur suivant
-    this.switchPlayer(opponent);
   },
 
   /**
@@ -195,17 +456,52 @@ Page({
       return;
     }
     
-    // Créer une copie du plateau
-    const newBoard = [...board];
+    // RÈGLE SUR PLACE :
+    // Le pion fautif et le pion déplacé sont DEUX pions distincts
+    // 
+    // 1. Pion fautif : pion du joueur précédent qui avait une capture possible mais n'a pas capturé
+    //    CE pion doit être retiré définitivement du jeu
+    // 
+    // 2. Pion déplacé : pion qui a été déplacé au tour précédent
+    //    CE pion doit être remis à sa position initiale (pas retiré)
     
-    // Retirer le premier pion qui pouvait capturer (pas le dernier mouvement)
-    // car le pion qui aurait dû capturer est celui de l'adversaire au tour précédent
-    const firstCapturingPiece = surPlaceInfo.capturingPieces[0];
-    if (firstCapturingPiece !== undefined && Game.isPlayerPiece(newBoard[firstCapturingPiece], surPlaceInfo.lastMovePlayer)) {
-      newBoard[firstCapturingPiece] = Game.EMPTY;
+    // Créer une copie du plateau actuel
+    let newBoard = [...board];
+    
+    // ÉTAPE 1 : Retirer UNIQUEMENT le pion fautif
+    // Le pion fautif est le premier pion de la liste capturingPieces
+    const faultPieceIndex = surPlaceInfo.capturingPieces[0];
+    if (faultPieceIndex !== undefined) {
+      // Vérifier que le pion fautif n'est pas le même que le pion déplacé
+      if (faultPieceIndex !== surPlaceInfo.lastToIndex) {
+        newBoard[faultPieceIndex] = Game.EMPTY;
+      }
     }
     
+    // ÉTAPE 2 : Annuler le déplacement du pion déplacé
+    // Le remettre exactement à sa position initiale
+    const movedPieceValue = newBoard[surPlaceInfo.lastToIndex];
+    newBoard[surPlaceInfo.lastToIndex] = Game.EMPTY;
+    newBoard[surPlaceInfo.lastFromIndex] = movedPieceValue;
+    
     const scores = Game.getScores(newBoard);
+    
+    // ÉTAPE 3 : Ajouter +1 au score du joueur actuel
+    let newPlayer1Points = player1Points;
+    let newPlayer2Points = player2Points;
+    
+    if (currentPlayer === Game.PLAYER1) {
+      newPlayer1Points++;
+    } else {
+      newPlayer2Points++;
+    }
+    
+    // Notifier le succès du SUR PLACE
+    wx.showToast({
+      title: 'SUR PLACE ! +1 point',
+      icon: 'success',
+      duration: 1500
+    });
     
     // Cacher le bouton et réinitialiser l'état
     this.setData({
@@ -214,14 +510,15 @@ Page({
       isSurPlaceAvailable: false,
       surPlaceInfo: null,
       player1Score: scores.player1,
-      player2Score: scores.player2
+      player2Score: scores.player2,
+      player1Points: newPlayer1Points,
+      player2Points: newPlayer2Points
     });
     
     // Vérifier l'état du jeu après le retrait du pion
     this.checkGameState();
     
-    // Le tour continue avec le même joueur (l'adversaire qui a annoncé SUR PLACE)
-    // Préparer l'état de capture pour le prochain joueur (le joueur qui vient de jouer)
+    // Préparer l'état de capture pour le prochain joueur
     const nextPlayer = surPlaceInfo.lastMovePlayer;
     const nextCaptureState = Game.createCaptureState(newBoard, nextPlayer);
     this.captureStateBeforeMove = nextCaptureState;
@@ -253,15 +550,17 @@ Page({
   },
 
   announceWinner(player, reason = '') {
-    const message = reason ? `Joueur ${player} a gagné! (${reason})` : `Joueur ${player} a gagné!`;
+    // Arrêter tout timer en cours
+    if (this.captureTimer) {
+      clearInterval(this.captureTimer);
+      this.captureTimer = null;
+    }
     
-    wx.showModal({
-      title: 'Victoire!',
-      content: message,
-      showCancel: false,
-      success: () => {
-        this.initGame();
-      }
+    const { player1Points, player2Points } = this.data;
+    
+    // Naviguer vers la page victoire avec les informations
+    wx.navigateTo({
+      url: `/pages/victoire/victoire?winner=${player}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}`
     });
   },
 
