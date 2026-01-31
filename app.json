@@ -6,6 +6,7 @@
     "pages/jeu/jeu",
     "pages/home/home",
     "pages/victoire/victoire"
+    "pages/profils/profils"
   ],
   "style": "v2",
   "window": {
