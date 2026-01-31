@@ -206,7 +206,10 @@ Page({
     // Le pion fautif est le premier pion de la liste capturingPieces
     const faultPieceIndex = surPlaceInfo.capturingPieces[0];
     if (faultPieceIndex !== undefined) {
-      newBoard[faultPieceIndex] = Game.EMPTY;
+      // Vérifier que le pion fautif n'est pas le même que le pion déplacé
+      if (faultPieceIndex !== surPlaceInfo.lastToIndex) {
+        newBoard[faultPieceIndex] = Game.EMPTY;
+      }
     }
     
     // ÉTAPE 2 : Annuler le déplacement du pion déplacé
