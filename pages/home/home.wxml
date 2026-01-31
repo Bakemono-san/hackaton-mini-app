@@ -9,7 +9,7 @@
     <text class="text-base text-light-orange">Jeu de stratégie traditionnel 🇸🇳</text>
     <view class="flex flex-col gap-4 items-center">
         <image src="/images/img_children_gaming.png" class="w-full logo-h rounded-lg" />
-        <menu-btn title="jouer" icon="" background="bg-green" colorClass="text-white" />
+        <menu-btn title="jouer" icon="" background="bg-green" colorClass="text-white" url="/pages/jeu/jeu"/>
         <menu-btn title="Profils joueurs" icon="" background="bg-yellow" colorClass="text-white" />
         <menu-btn title="Regles du jeu" icon="" background="bg-red" url="/pages/rules/rules" colorClass="text-white" />
     </view>
