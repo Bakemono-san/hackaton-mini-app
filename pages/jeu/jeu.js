@@ -1,9 +1,11 @@
 // jeu.js - Page du jeu de 12 pions (Dame Sénégalaise)
 // La case centrale (index 12) est la cage de départ - navigable comme une case vide
 const Game = require('../../utils/game.js');
+const app = getApp()
 
 Page({
   data: {
+    players: [],
     // État du plateau (0: vide, 1: joueur1, 2: joueur2, 3: croix/centre, 4: dame1, 5: dame2)
     board: [],
     currentPlayer: Game.PLAYER1, // Joueur actuel (1 ou 2)
@@ -20,6 +22,9 @@ Page({
 
   onLoad(options) {
     // Initialisation du jeu
+    this.setData({
+      players: app.globalData.players
+    })
     this.initGame();
   },
 
