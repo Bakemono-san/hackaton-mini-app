@@ -591,9 +591,12 @@ Page({
     
     const { player1Points, player2Points } = this.data;
     
+    // Incrémenter la victoire du joueur et récupérer les scores de session
+    const sessionScores = Game.incrementVictory(player);
+    
     // Naviguer vers la page victoire avec les informations
     wx.navigateTo({
-      url: `/pages/victoire/victoire?winner=${player}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}`
+      url: `/pages/victoire/victoire?winner=${player}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}&sessionVictories1=${sessionScores.victories1}&sessionVictories2=${sessionScores.victories2}`
     });
   },
 

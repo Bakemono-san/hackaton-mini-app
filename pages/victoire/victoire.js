@@ -7,6 +7,8 @@ Page({
     reason: '', // Raison de la victoire
     player1Points: 0, // Points du joueur 1
     player2Points: 0, // Points du joueur 2
+    sessionVictories1: 0, // Victoires cumulées joueur 1
+    sessionVictories2: 0, // Victoires cumulées joueur 2
   },
 
   onLoad(options) {
@@ -15,6 +17,8 @@ Page({
     const reason = options.reason || '';
     const player1Points = parseInt(options.player1Points) || 0;
     const player2Points = parseInt(options.player2Points) || 0;
+    const sessionVictories1 = parseInt(options.sessionVictories1) || 0;
+    const sessionVictories2 = parseInt(options.sessionVictories2) || 0;
 
     const winnerName = winner === 1 ? 'Joueur 1' : 'Joueur 2';
 
@@ -24,7 +28,9 @@ Page({
       winnerName: winnerName,
       reason: reason,
       player1Points: player1Points,
-      player2Points: player2Points
+      player2Points: player2Points,
+      sessionVictories1: sessionVictories1,
+      sessionVictories2: sessionVictories2
     });
   },
 
@@ -36,7 +42,10 @@ Page({
   },
 
   onHome() {
-    // Retourner à l'accueil
+    // Retourner à l'accueil et réinitialiser les victoires (fin de session)
+    const Game = require('../../utils/game.js');
+    Game.resetVictories();
+    
     wx.reLaunch({
       url: '/pages/home/home'
     });

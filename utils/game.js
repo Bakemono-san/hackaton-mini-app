@@ -1088,6 +1088,79 @@ function getScores(board) {
 }
 
 // ============================================================================
+// FONCTIONS DE GESTION DES VICTOIRES (SESSION LOCALE)
+// ============================================================================
+
+/**
+ * Récupère le nombre de victoires du joueur 1
+ * @returns {number} - Nombre de victoires du joueur 1
+ */
+function getPlayer1Victories() {
+  try {
+    return wx.getStorageSync('player1Victories') || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Récupère le nombre de victoires du joueur 2
+ * @returns {number} - Nombre de victoires du joueur 2
+ */
+function getPlayer2Victories() {
+  try {
+    return wx.getStorageSync('player2Victories') || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
+/**
+ * Sauvegarde le nombre de victoires pour les deux joueurs
+ * @param {number} victories1 - Victoires du joueur 1
+ * @param {number} victories2 - Victoires du joueur 2
+ */
+function saveVictories(victories1, victories2) {
+  try {
+    wx.setStorageSync('player1Victories', victories1);
+    wx.setStorageSync('player2Victories', victories2);
+  } catch (e) {
+    console.error('Erreur lors de la sauvegarde des victoires:', e);
+  }
+}
+
+/**
+ * Incrémente la victoire du joueur spécifié
+ * @param {number} player - Joueur (1 ou 2)
+ * @returns {object} - {victories1, victories2} - Nouveaux scores
+ */
+function incrementVictory(player) {
+  let victories1 = getPlayer1Victories();
+  let victories2 = getPlayer2Victories();
+  
+  if (player === PLAYER1) {
+    victories1++;
+  } else if (player === PLAYER2) {
+    victories2++;
+  }
+  
+  saveVictories(victories1, victories2);
+  return { victories1, victories2 };
+}
+
+/**
+ * Réinitialise les victoires des deux joueurs (fin de session)
+ */
+function resetVictories() {
+  try {
+    wx.removeStorageSync('player1Victories');
+    wx.removeStorageSync('player2Victories');
+  } catch (e) {
+    console.error('Erreur lors de la réinitialisation des victoires:', e);
+  }
+}
+
+// ============================================================================
 // FONCTIONS DE DÉBOGAGE
 // ============================================================================
 
@@ -1185,6 +1258,13 @@ module.exports = {
   // Fonctions d'initialisation
   initBoard,
   getScores,
+
+  // Fonctions de gestion des victoires (session locale)
+  getPlayer1Victories,
+  getPlayer2Victories,
+  saveVictories,
+  incrementVictory,
+  resetVictories,
 
   // Fonctions de débogage
   printBoard

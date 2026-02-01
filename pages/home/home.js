@@ -1,4 +1,6 @@
-// js
+// home.js
+const Game = require('../../utils/game.js');
+
 Page({
 
   /**
@@ -26,7 +28,8 @@ Page({
    * Lifecycle function--Called when page show
    */
   onShow() {
-
+    // Réinitialiser les victoires quand on revient à l'accueil (fin de session)
+    Game.resetVictories();
   },
 
   /**
@@ -42,4 +45,13 @@ Page({
   onUnload() {
 
   },
+
+  /**
+   * Redirection vers la page de jeu
+   */
+  goToGame() {
+    wx.navigateTo({
+      url: '/pages/jeu/jeu'
+    });
+  }
 })
