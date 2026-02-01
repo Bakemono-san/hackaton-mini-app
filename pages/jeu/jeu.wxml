@@ -14,7 +14,7 @@
         <image src="/images/icones/eagle.svg" class="avatar-img"></image>
       </view>
       <view class="player-info">
-        <text class="player-name">Joueur 1</text>
+        <text class="player-name">{{players[0].name}}</text>
         <text class="player-score">{{player1Score}} jetons | {{player1Points}} pts</text>
       </view>
     </view>
@@ -23,7 +23,7 @@
         <image src="/images/icones/lion.svg" class="avatar-img"></image>
       </view>
       <view class="player-info">
-        <text class="player-name">Joueur 2</text>
+        <text class="player-name">{{players[1].name}}</text>
         <text class="player-score">{{player2Score}} jetons | {{player2Points}} pts</text>
       </view>
     </view>

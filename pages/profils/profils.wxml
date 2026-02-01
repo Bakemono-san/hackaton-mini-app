@@ -1,0 +1,27 @@
+<view class="page h-full flex flex-col px-4 items-center justify-center gap-4">
+    <view class="header">
+        <view class="back-button" bindtap="onBack">
+            <image src="/images/icones/retour.svg" class="back-icon"></image>
+            <text>Retour</text>
+        </view>
+    </view>
+    <view class="flex flex-col gap-4 text-base items-center">
+        <view class="flex items-center justify-center flex-col gap-1">
+            <view class="flex gap-2 items-center">
+                <image src="/images/icones/profil-setting.jpeg" class="icon"/>
+                <text class="text-xl text-brown">Profils Joueurs</text>
+            </view>
+            <text class="text-light-orange">Personnalisez vos profils </text>
+        </view>
+
+        <view class="flex flex-col gap-4 items-center">
+            <view wx:for="{{players}}" wx:key="{{index}}" class="p-6 {{index === 0 ? 'border-green' : 'border-red'}}  rounded-md flex flex-col items-center gap-4">
+                <view class="{{index === 0 ? 'bg-green' : 'bg-red'}} text-white text-xl px-4 py-2 flex items-center justify-center rounded-lg w-fit"> {{item.name}} </view>
+                <image class="avatar {{index === 0 ? 'bg-green' : 'bg-red'}} " src="/images/icones/eagle.svg" />
+                <view>
+                    <input placeholder="Joueur 1" value="{{item.name}}" data-index="{{index}}" bindinput="onPlayerInput" />
+                </view>
+            </view>
+        </view>
+    </view>
+</view>
