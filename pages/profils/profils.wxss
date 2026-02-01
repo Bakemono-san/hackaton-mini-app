@@ -11,7 +11,7 @@
 
 .modal-card {
   background: #fff;
-  width: 90%;
+  width: 80%;
   padding: 32rpx;
   border-radius: 24rpx;
   height: max-content;
