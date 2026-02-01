@@ -11,7 +11,7 @@
   <view class="players-section">
     <view class="player-card player1 {{currentPlayer === 1 ? 'active' : ''}}">
       <view class="player-avatar">
-        <image src="/images/icones/eagle.svg" class="avatar-img"></image>
+        <image src="{{players[0].avatar}}" class="avatar-img"></image>
       </view>
       <view class="player-info">
         <text class="player-name">{{players[0].name}}</text>
@@ -20,7 +20,7 @@
     </view>
     <view class="player-card player2 {{currentPlayer === 2 ? 'active' : ''}}">
       <view class="player-avatar">
-        <image src="/images/icones/lion.svg" class="avatar-img"></image>
+        <image src="{{players[1].avatar}}" class="avatar-img"></image>
       </view>
       <view class="player-info">
         <text class="player-name">{{players[1].name}}</text>

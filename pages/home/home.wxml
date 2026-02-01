@@ -12,7 +12,7 @@
         <menu-btn title="jouer" icon="" background="bg-green" colorClass="text-white" url="/pages/jeu/jeu"/>
         <menu-btn title="Profils joueurs" icon="" background="bg-yellow" colorClass="text-white" url="/pages/profils/profils"/>
         <menu-btn title="Regles du jeu" icon="" background="bg-red" url="/pages/rules/rules" colorClass="text-white" />
-    </view>
+    </view> 
     <view class="flex gap-2 items-center ">
         <view>🇸🇳</view>
         <view class="flex flex-col text-xs">

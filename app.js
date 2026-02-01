@@ -31,8 +31,8 @@ App({
   globalData: {
     userInfo: null,
     players: [
-      {name: "Moussa"},
-      {name: "Papa"}
+      {name: "Moussa",avatar: '/images/icones/lion.svg'},
+      {name: "Papa", avatar: '/images/icones/elephant.svg'}
     ]
   }
 })
