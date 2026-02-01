@@ -24,6 +24,14 @@
                     <text class="score-value">{{player2Points}} pts</text>
                 </view>
             </view>
+            <view class="session-score-display">
+                <text class="session-score-label">Victoires session</text>
+                <view class="session-score-values">
+                    <text class="session-score-value session-player1">{{sessionVictories1}}</text>
+                    <text class="session-score-separator">–</text>
+                    <text class="session-score-value session-player2">{{sessionVictories2}}</text>
+                </view>
+            </view>
             <view class="victory-actions">
                 <button class="victory-btn btn-replay" bindtap="onReplay">🔄 Rejouer</button>
                 <button class="victory-btn btn-home" bindtap="onHome">🏠 Accueil</button>
