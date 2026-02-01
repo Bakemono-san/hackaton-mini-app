@@ -826,6 +826,42 @@ function promotePiece(board, index, player) {
 }
 
 /**
+ * Vérifie et applique les promotions nécessaires pour tous les pions d'un joueur
+ * Utile quand un joueur n'a plus qu'un seul pion - il devient dame immédiatement
+ * 
+ * @param {number[]} board - Plateau de jeu
+ * @param {number} player - Joueur à vérifier
+ * @returns {object} - {board, promoted}
+ */
+function checkAllPromotions(board, player) {
+  const playerPieceCount = countPlayerPieces(board, player);
+  
+  // Si le joueur a plus d'un pion, pas de promotion automatique
+  if (playerPieceCount > 1) {
+    return { board, promoted: false };
+  }
+  
+  // Le joueur n'a qu'un seul pion - le promouvoir en dame
+  const newBoard = [...board];
+  let promoted = false;
+  
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (isPlayerPiece(newBoard[i], player) && !isDame(newBoard[i], player)) {
+      // C'est un pion normal du joueur, le promouvoir en dame
+      if (player === PLAYER1) {
+        newBoard[i] = DAME1;
+      } else {
+        newBoard[i] = DAME2;
+      }
+      promoted = true;
+      break; // Un seul pion, donc on arrête après l'avoir promu
+    }
+  }
+  
+  return { board: newBoard, promoted };
+}
+
+/**
  * Vérifie et applique les promotions nécessaires après un mouvement
  * 
  * @param {number[]} board - Plateau de jeu
@@ -1135,6 +1171,7 @@ module.exports = {
   countPlayerPieces,
   promotePiece,
   checkPromotion,
+  checkAllPromotions,
 
   // Fonctions de fin de partie
   hasPieces,

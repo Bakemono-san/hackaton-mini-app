@@ -150,6 +150,15 @@ Page({
     
     const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
     
+    // Vérifier la promotion automatique pour les deux joueurs
+    // Si un joueur n'a qu'un seul pion, il devient dame
+    const promotion1 = Game.checkAllPromotions(board, Game.PLAYER1);
+    const promotion2 = Game.checkAllPromotions(promotion1.board, Game.PLAYER2);
+    let finalBoard = promotion2.board;
+    
+    // Recalculer les scores après promotion
+    const finalScores = Game.getScores(finalBoard);
+    
     // Vérifier si le bouton SUR PLACE doit apparaître pour l'adversaire
     const previousCaptureState = this.captureStateBeforeMove;
     let newSurPlaceInfo = null;
@@ -167,11 +176,11 @@ Page({
     }
     
     // Préparer l'état de capture pour le prochain joueur
-    const nextCaptureState = Game.createCaptureState(board, opponent);
+    const nextCaptureState = Game.createCaptureState(finalBoard, opponent);
     this.captureStateBeforeMove = nextCaptureState;
     
     // Vérifier l'état du jeu pour le prochain joueur
-    const gameOver = Game.checkGameOver(board, opponent);
+    const gameOver = Game.checkGameOver(finalBoard, opponent);
     
     if (gameOver.gameOver) {
       this.announceWinner(gameOver.winner, gameOver.reason);
@@ -180,9 +189,12 @@ Page({
     
     // Passer au joueur suivant
     this.setData({
+      board: finalBoard,
       selectedCell: null,
       pendingCaptureIndex: null,
       currentPlayer: opponent,
+      player1Score: finalScores.player1,
+      player2Score: finalScores.player2,
       isSurPlaceAvailable: newIsSurPlaceAvailable,
       surPlaceInfo: newSurPlaceInfo
     });
@@ -264,6 +276,14 @@ Page({
     
     const opponent = currentPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
     
+    // Vérifier la promotion automatique pour les deux joueurs
+    const promotion1 = Game.checkAllPromotions(board, Game.PLAYER1);
+    const promotion2 = Game.checkAllPromotions(promotion1.board, Game.PLAYER2);
+    let finalBoard = promotion2.board;
+    
+    // Recalculer les scores après promotion
+    const finalScores = Game.getScores(finalBoard);
+    
     // Vérifier si le bouton SUR PLACE doit apparaître pour l'adversaire
     const previousCaptureState = this.captureStateBeforeMove;
     let newSurPlaceInfo = null;
@@ -281,11 +301,11 @@ Page({
     }
     
     // Préparer l'état de capture pour le prochain joueur
-    const nextCaptureState = Game.createCaptureState(board, opponent);
+    const nextCaptureState = Game.createCaptureState(finalBoard, opponent);
     this.captureStateBeforeMove = nextCaptureState;
     
     // Vérifier l'état du jeu pour le prochain joueur
-    const gameOver = Game.checkGameOver(board, opponent);
+    const gameOver = Game.checkGameOver(finalBoard, opponent);
     
     if (gameOver.gameOver) {
       this.announceWinner(gameOver.winner, gameOver.reason);
@@ -294,14 +314,14 @@ Page({
     
     // Passer au joueur suivant
     this.setData({
-      board: board,
+      board: finalBoard,
       selectedCell: null,
       pendingCaptureIndex: null,
       captureWindowActive: false,
       captureTimeRemaining: 0,
       currentPlayer: opponent,
-      player1Score: scores.player1,
-      player2Score: scores.player2,
+      player1Score: finalScores.player1,
+      player2Score: finalScores.player2,
       player1Points: player1Points,
       player2Points: player2Points,
       isSurPlaceAvailable: newIsSurPlaceAvailable,
@@ -325,8 +345,6 @@ Page({
       validation.captureData ? validation.captureData.capturedIndex : undefined
     );
 
-    const scores = Game.getScores(moveResult.newBoard);
-    
     // Incrémenter les points si c'était une capture
     let newPlayer1Points = player1Points;
     let newPlayer2Points = player2Points;
@@ -338,6 +356,15 @@ Page({
         newPlayer2Points++;
       }
     }
+    
+    // Vérifier la promotion automatique pour les deux joueurs
+    // Si un joueur n'a qu'un seul pion, il devient dame
+    const promotion1 = Game.checkAllPromotions(moveResult.newBoard, Game.PLAYER1);
+    const promotion2 = Game.checkAllPromotions(promotion1.board, Game.PLAYER2);
+    moveResult.newBoard = promotion2.board;
+    
+    // Recalculer les scores après promotion
+    const scores = Game.getScores(moveResult.newBoard);
     
     let newPendingCaptureIndex = null;
     let newSelectedCell = null;
@@ -479,8 +506,6 @@ Page({
     newBoard[surPlaceInfo.lastToIndex] = Game.EMPTY;
     newBoard[surPlaceInfo.lastFromIndex] = movedPieceValue;
     
-    const scores = Game.getScores(newBoard);
-    
     // ÉTAPE 3 : Ajouter +1 au score du joueur actuel
     let newPlayer1Points = player1Points;
     let newPlayer2Points = player2Points;
@@ -497,6 +522,14 @@ Page({
       icon: 'success',
       duration: 1500
     });
+    
+    // Vérifier la promotion automatique pour les deux joueurs
+    const promotion1 = Game.checkAllPromotions(newBoard, Game.PLAYER1);
+    const promotion2 = Game.checkAllPromotions(promotion1.board, Game.PLAYER2);
+    newBoard = promotion2.board;
+    
+    // Recalculer les scores après promotion
+    const scores = Game.getScores(newBoard);
     
     // Cacher le bouton et réinitialiser l'état
     this.setData({
