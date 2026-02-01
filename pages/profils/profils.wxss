@@ -1,1 +1,82 @@
-/* wxss */
+/* Modal */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  width: 90%;
+  padding: 32rpx;
+  border-radius: 24rpx;
+  height: max-content;
+}
+
+.modal-title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8b3a00;
+  border: 2rpx solid #c05600;
+  padding: 16rpx;
+  margin-bottom: 32rpx;
+}
+
+.avatar-card.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Avatars */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24rpx;
+}
+
+.avatar-card {
+  background: #fffbe6;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  text-align: center;
+  border: 4rpx solid transparent;
+}
+
+.avatar-card.active {
+  border-color: #c05600;
+  background: #fff3c4;
+}
+
+
+
+.avatar-name {
+  font-weight: bold;
+  color: #7a2e00;
+}
+
+.avatar-label {
+  font-size: 22rpx;
+  color: #c05600;
+}
+
+.avatar-icon {
+  width: 96rpx;
+  height: 96rpx;
+}
+
+.avatar {
+  width: 140rpx;
+  height: 140rpx;
+}
+
+/* Button */
+.btn-confirm {
+  margin-top: 32rpx;
+  background: #2d3748;
+  color: #fff;
+}
