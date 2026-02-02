@@ -642,12 +642,21 @@ Page({
     
     const { player1Points, player2Points } = this.data;
     
-    // Incrémenter la victoire du joueur et récupérer les scores de session
-    const sessionScores = Game.incrementVictory(player);
+    // Si match nul (player est null), ne pas incrémenter de victoire
+    let sessionScores;
+    if (player === null) {
+      sessionScores = {
+        victories1: Game.getPlayer1Victories(),
+        victories2: Game.getPlayer2Victories()
+      };
+    } else {
+      // Incrémenter la victoire du joueur et récupérer les scores de session
+      sessionScores = Game.incrementVictory(player);
+    }
     
     // Naviguer vers la page victoire avec les informations
     wx.navigateTo({
-      url: `/pages/victoire/victoire?winner=${player}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}&sessionVictories1=${sessionScores.victories1}&sessionVictories2=${sessionScores.victories2}`
+      url: `/pages/victoire/victoire?winner=${player !== null ? player : 'null'}&reason=${encodeURIComponent(reason)}&player1Points=${player1Points}&player2Points=${player2Points}&sessionVictories1=${sessionScores.victories1}&sessionVictories2=${sessionScores.victories2}`
     });
   },
 

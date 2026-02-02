@@ -4,14 +4,19 @@
     <view class="victory-overlay">
         <view class="victory-modal">
             <view class="victory-header">
-                <text class="victory-title">VICTOIRE 👑</text>
+                <text class="victory-title">{{isDraw ? 'MATCH NUL 🤝' : 'VICTOIRE 👑'}}</text>
             </view>
-            <view class="winner-avatar">
+            <view wx:if="{{!isDraw}}" class="winner-avatar">
                 <view class="winner-circle {{winner === 1 ? 'winner-player1' : 'winner-player2'}}">
                     <view class="winner-icon">{{winner === 1 ? '🦁' : '🦅'}}</view>
                 </view>
             </view>
-            <text class="winner-text">{{winnerName}} a gagné !</text>
+            <view wx:else class="winner-avatar">
+                <view class="winner-circle winner-draw">
+                    <view class="winner-icon">🤝</view>
+                </view>
+            </view>
+            <text class="winner-text">{{isDraw ? 'Match nul !' : winnerName + ' a gagné !'}}</text>
             <text wx:if="{{reason}}" class="victory-reason">{{reason}}</text>
             <view class="score-display">
                 <view class="score-item score-player1">

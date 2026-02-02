@@ -133,6 +133,14 @@
   border-color: #F56565;
 }
 
+.winner-draw {
+  background: radial-gradient(circle at 30% 30%, #A0AEC0, #718096);
+}
+
+.winner-draw::after {
+  border-color: #718096;
+}
+
 .winner-img {
   width: 120rpx;
   height: 120rpx;

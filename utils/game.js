@@ -939,7 +939,15 @@ function checkGameOver(board, currentPlayer) {
     return { gameOver: true, winner: PLAYER1, reason: 'Le joueur 2 n\'a plus de pions' };
   }
 
-  // Vérification 2: Le joueur actuel n'a plus de coups légaux
+  // Vérification 2: Match nul - chaque joueur n'a qu'un seul pion
+  const player1Count = countPlayerPieces(board, PLAYER1);
+  const player2Count = countPlayerPieces(board, PLAYER2);
+  
+  if (player1Count === 1 && player2Count === 1) {
+    return { gameOver: true, winner: null, reason: 'Match nul - chaque joueur n\'a qu\'un seul pion' };
+  }
+
+  // Vérification 3: Le joueur actuel n'a plus de coups légaux
   if (!hasLegalMoves(board, currentPlayer)) {
     return { gameOver: true, winner: opponent, reason: 'Le joueur actuel n\'a plus de coups possibles' };
   }
