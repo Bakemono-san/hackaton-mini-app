@@ -37,7 +37,6 @@ Component({
     navigate(){
       const {url} = this.data
       if (!url || url.trim() === '') {
-        // Pas d'URL - laisser le bindtap du parent gérer le clic
         return
       }
       wx.navigateTo({

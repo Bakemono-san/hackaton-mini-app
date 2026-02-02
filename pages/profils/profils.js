@@ -29,7 +29,6 @@ Page({
     const playerIndex = e.currentTarget.dataset.index
     const { players } = this.data
 
-    // avatars already used by OTHER players
     const disabledAvatars = players
       .filter((_, i) => i !== playerIndex)
       .map(p => p.avatar)

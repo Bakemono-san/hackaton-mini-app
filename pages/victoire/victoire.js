@@ -1,19 +1,17 @@
-// victoire.js - Page de victoire
 Page({
   data: {
-    showVictory: true, // Toujours afficher la victoire
-    winner: null, // Joueur gagnant (null pour match nul)
+    showVictory: true,
+    winner: null,
     winnerName: '',
-    reason: '', // Raison de la victoire
-    player1Points: 0, // Points du joueur 1
-    player2Points: 0, // Points du joueur 2
-    sessionVictories1: 0, // Victoires cumulées joueur 1
-    sessionVictories2: 0, // Victoires cumulées joueur 2
-    isDraw: false, // Si c'est un match nul
+    reason: '',
+    player1Points: 0,
+    player2Points: 0,
+    sessionVictories1: 0,
+    sessionVictories2: 0,
+    isDraw: false,
   },
 
   onLoad(options) {
-    // Récupérer les paramètres passés depuis la page jeu
     const winnerParam = options.winner;
     const winner = winnerParam === 'null' ? null : parseInt(winnerParam);
     const reason = options.reason || '';
@@ -39,14 +37,12 @@ Page({
   },
 
   onReplay() {
-    // Rejouer une partie - naviguer vers la page jeu
     wx.redirectTo({
       url: '/pages/jeu/jeu'
     });
   },
 
   onHome() {
-    // Retourner à l'accueil et réinitialiser les victoires (fin de session)
     const Game = require('../../utils/game.js');
     Game.resetVictories();
     
@@ -56,7 +52,6 @@ Page({
   },
 
   onBack() {
-    // Retourner à l'accueil
     wx.reLaunch({
       url: '/pages/home/home'
     });
