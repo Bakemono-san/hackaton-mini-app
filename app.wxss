@@ -26,6 +26,10 @@
   background-color: #1ba24d;
 }
 
+.bg-slate{
+  background-color: #374152;
+}
+
 .bg-dark-green {
   background-color: #166c36  ;
 }

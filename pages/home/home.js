@@ -53,5 +53,14 @@ Page({
     wx.navigateTo({
       url: '/pages/jeu/jeu'
     });
+  },
+
+  /**
+   * Redirection vers le mode solo (contre l'IA)
+   */
+  goToSoloMode() {
+    wx.navigateTo({
+      url: '/pages/jeu/jeu?mode=solo'
+    });
   }
 })

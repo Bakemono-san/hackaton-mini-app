@@ -1,14 +1,20 @@
 // jeu.js - Page du jeu de 12 pions (Dame Sénégalaise)
 // La case centrale (index 12) est la cage de départ - navigable comme une case vide
 const Game = require('../../utils/game.js');
+const AI = require('../../utils/ai.js');
 const app = getApp()
 
 // Constante pour la fenêtre de validation des captures multiples (en millisecondes)
 const CAPTURE_WINDOW_MS = 3000;
 
+// Délai avant que l'IA joue (pour que ce soit visible)
+const AI_DELAY_MS = 500;
+
 Page({
   data: {
     players: [],
+    isSoloMode: false,     // Mode solo (vs IA)
+    aiPlayer: Game.PLAYER2, // L'IA joue en tant que joueur 2 par défaut
     // État du plateau (0: vide, 1: joueur1, 2: joueur2, 3: croix/centre, 4: dame1, 5: dame2)
     board: [],
     currentPlayer: Game.PLAYER1, // Joueur actuel (1 ou 2)
@@ -30,9 +36,24 @@ Page({
 
   onLoad(options) {
     // Initialisation du jeu
+    let players = app.globalData.players;
+    
+    // Vérifier si on est en mode solo
+    const isSoloMode = options.mode === 'solo';
+    
+    // Si mode solo, modifier le nom du joueur 2
+    if (isSoloMode) {
+      players = [
+        players[0],
+        {name: "IA Expert", avatar: players[1].avatar}
+      ];
+    }
+    
     this.setData({
-      players: app.globalData.players
-    })
+      players: players,
+      isSoloMode: isSoloMode
+    });
+    
     this.initGame();
   },
 
@@ -70,8 +91,15 @@ Page({
   },
 
   onCellTap(e) {
+    const { isSoloMode, aiPlayer, currentPlayer } = this.data;
+    
+    // En mode solo, bloquer les clics si c'est le tour de l'IA
+    if (isSoloMode && currentPlayer === aiPlayer) {
+      return; // L'IA joue, pas d'interaction utilisateur
+    }
+    
     const index = e.currentTarget.dataset.index;
-    const { board, currentPlayer, selectedCell, pendingCaptureIndex, captureWindowActive } = this.data;
+    const { board, selectedCell, pendingCaptureIndex, captureWindowActive } = this.data;
     
     // Vérifier si le joueur clique sur le même pion sélectionné (pour terminer le tour)
     if (index === selectedCell) {
@@ -133,14 +161,21 @@ Page({
       const validation = Game.validateMove(selectedCell, index, board, currentPlayer);
       
       if (validation.valid) {
+        // Désélectionner immédiatement pour éviter la latence visuelle
+        this.setData({
+          selectedCell: null
+        });
+        
         // Le coup est valide, l'exécuter
         this.moveToken(selectedCell, index, validation);
       } else {
-        // Coup non valide - REFUS SILENCIEUX
+        // Coup non valide - désélectionner le pion
+        this.deselectToken();
         return;
       }
     } else {
-      // La case contient un pion adverse - REFUS SILENCIEUX
+      // La case contient un pion adverse - désélectionner le pion
+      this.deselectToken();
       return;
     }
   },
@@ -203,6 +238,9 @@ Page({
       isSurPlaceAvailable: newIsSurPlaceAvailable,
       surPlaceInfo: newSurPlaceInfo
     });
+    
+    // Si c'est le mode solo et c'est le tour de l'IA, jouer automatiquement
+    this.checkAndPlayAI();
   },
 
   selectToken(index) {
@@ -332,6 +370,9 @@ Page({
       isSurPlaceAvailable: newIsSurPlaceAvailable,
       surPlaceInfo: newSurPlaceInfo
     });
+    
+    // Si c'est le mode solo et c'est le tour de l'IA, jouer automatiquement
+    this.checkAndPlayAI();
   },
 
   moveToken(fromIndex, toIndex, validation) {
@@ -429,6 +470,9 @@ Page({
         surPlaceInfo: newSurPlaceInfo
       });
       
+      // Si c'est le mode solo et c'est le tour de l'IA, jouer automatiquement
+      this.checkAndPlayAI();
+      
       return;
     }
     
@@ -455,7 +499,14 @@ Page({
    * Si le bouton est cliqué alors qu'il n'est pas disponible, le joueur perd un point
    */
   onPlace() {
-    const { surPlaceInfo, board, currentPlayer, player1Points, player2Points } = this.data;
+    const { isSoloMode, aiPlayer, currentPlayer } = this.data;
+    
+    // En mode solo, bloquer si c'est le tour de l'IA
+    if (isSoloMode && currentPlayer === aiPlayer) {
+      return;
+    }
+    
+    const { surPlaceInfo, board, player1Points, player2Points } = this.data;
     
     // Si le bouton SUR PLACE n'est pas disponible, le joueur perd un point (faux SUR PLACE)
     if (!surPlaceInfo) {
@@ -618,6 +669,217 @@ Page({
   onBack() {
     wx.navigateBack({
       delta: 1
+    });
+  },
+
+  /**
+   * Vérifie si c'est le tour de l'IA et joue automatiquement
+   */
+  checkAndPlayAI() {
+    const { isSoloMode, aiPlayer, currentPlayer } = this.data;
+    
+    if (!isSoloMode || currentPlayer !== aiPlayer) {
+      return; // Pas le tour de l'IA
+    }
+    
+    // Forcer la désélection immédiate pour éviter la latence visuelle
+    this.setData({
+      selectedCell: null,
+      pendingCaptureIndex: null
+    });
+    
+    // Petite pause pour que le joueur voit le changement
+    setTimeout(() => {
+      this.playAIMove();
+    }, AI_DELAY_MS);
+  },
+
+  /**
+   * L'IA joue son tour
+   */
+  playAIMove() {
+    const { board, aiPlayer, surPlaceInfo, isSurPlaceAvailable } = this.data;
+    
+    // 1. Vérifier si l'IA doit cliquer sur SUR PLACE
+    if (isSurPlaceAvailable && AI.shouldClickSurPlace(surPlaceInfo, board, aiPlayer)) {
+      this.aiClickSurPlace();
+      return;
+    }
+    
+    // 2. Trouver le meilleur coup
+    const bestMove = AI.getBestMove(board, aiPlayer);
+    
+    if (!bestMove) {
+      // Pas de coup possible - fin de partie
+      return;
+    }
+    
+    // 3. Exécuter le coup
+    this.executeAIMove(bestMove);
+  },
+
+  /**
+   * L'IA clique sur SUR PLACE
+   */
+  aiClickSurPlace() {
+    const { surPlaceInfo, board, aiPlayer, player1Points, player2Points } = this.data;
+    
+    if (!surPlaceInfo) {
+      return;
+    }
+    
+    // Créer une copie du plateau actuel
+    let newBoard = [...board];
+    
+    // ÉTAPE 1 : Retirer UNIQUEMENT le pion fautif
+    const faultPieceIndex = surPlaceInfo.capturingPieces[0];
+    if (faultPieceIndex !== undefined) {
+      if (faultPieceIndex !== surPlaceInfo.lastToIndex) {
+        newBoard[faultPieceIndex] = Game.EMPTY;
+      }
+    }
+    
+    // ÉTAPE 2 : Annuler le déplacement du pion déplacé
+    const movedPieceValue = newBoard[surPlaceInfo.lastToIndex];
+    newBoard[surPlaceInfo.lastToIndex] = Game.EMPTY;
+    newBoard[surPlaceInfo.lastFromIndex] = movedPieceValue;
+    
+    // ÉTAPE 3 : Ajouter +1 au score de l'IA
+    let newPlayer1Points = player1Points;
+    let newPlayer2Points = player2Points;
+    
+    if (aiPlayer === Game.PLAYER1) {
+      newPlayer1Points++;
+    } else {
+      newPlayer2Points++;
+    }
+    
+    // Vérifier la promotion automatique
+    const promotion1 = Game.checkAllPromotions(newBoard, Game.PLAYER1);
+    const promotion2 = Game.checkAllPromotions(promotion1.board, Game.PLAYER2);
+    newBoard = promotion2.board;
+    
+    const scores = Game.getScores(newBoard);
+    
+    this.setData({
+      board: newBoard,
+      selectedCell: null,
+      isSurPlaceAvailable: false,
+      surPlaceInfo: null,
+      player1Score: scores.player1,
+      player2Score: scores.player2,
+      player1Points: newPlayer1Points,
+      player2Points: newPlayer2Points
+    });
+    
+    this.checkGameState();
+    
+    const nextPlayer = surPlaceInfo.lastMovePlayer;
+    const nextCaptureState = Game.createCaptureState(newBoard, nextPlayer);
+    this.captureStateBeforeMove = nextCaptureState;
+    
+    // Continuer à jouer si c'est toujours le tour de l'IA
+    setTimeout(() => {
+      this.checkAndPlayAI();
+    }, AI_DELAY_MS);
+  },
+
+  /**
+   * Exécute un coup de l'IA
+   */
+  executeAIMove(move) {
+    const { board, aiPlayer, player1Points, player2Points } = this.data;
+    
+    // Stocker l'état de capture AVANT le mouvement
+    const previousCaptureState = this.captureStateBeforeMove;
+    
+    // Effectuer le mouvement
+    const moveResult = Game.makeMove(
+      board,
+      move.fromIndex,
+      move.toIndex,
+      aiPlayer,
+      move.isCapture,
+      move.captureData ? move.captureData.capturedIndex : undefined
+    );
+
+    // Incrémenter les points si c'était une capture
+    let newPlayer1Points = player1Points;
+    let newPlayer2Points = player2Points;
+    
+    if (move.isCapture) {
+      if (aiPlayer === Game.PLAYER1) {
+        newPlayer1Points++;
+      } else {
+        newPlayer2Points++;
+      }
+    }
+
+    const scores = Game.getScores(moveResult.newBoard);
+    
+    // Vérifier s'il y a des captures multiples possibles
+    if (move.isCapture) {
+      const continueCapture = AI.getContinueCapture(moveResult.newBoard, move.toIndex, aiPlayer);
+      
+      if (continueCapture) {
+        // Il y a une capture continue - l'exécuter après un délai
+        this.setData({
+          board: moveResult.newBoard,
+          player1Score: scores.player1,
+          player2Score: scores.player2,
+          player1Points: newPlayer1Points,
+          player2Points: newPlayer2Points
+        });
+        
+        setTimeout(() => {
+          this.executeAIMove(continueCapture);
+        }, AI_DELAY_MS);
+        
+        return;
+      }
+    }
+    
+    // Pas de capture continue - terminer le tour de l'IA
+    const opponent = aiPlayer === Game.PLAYER1 ? Game.PLAYER2 : Game.PLAYER1;
+    
+    let newIsSurPlaceAvailable = false;
+    let newSurPlaceInfo = null;
+    
+    if (!move.isCapture && previousCaptureState.capturingPieces.length > 0) {
+      newSurPlaceInfo = {
+        previousBoard: previousCaptureState.board,
+        capturingPieces: previousCaptureState.capturingPieces,
+        lastMovePlayer: aiPlayer,
+        lastFromIndex: move.fromIndex,
+        lastToIndex: move.toIndex
+      };
+      newIsSurPlaceAvailable = true;
+    }
+    
+    // Préparer l'état de capture pour le prochain joueur
+    const nextCaptureState = Game.createCaptureState(moveResult.newBoard, opponent);
+    this.captureStateBeforeMove = nextCaptureState;
+    
+    // Vérifier l'état du jeu
+    const gameOver = Game.checkGameOver(moveResult.newBoard, opponent);
+    
+    if (gameOver.gameOver) {
+      this.announceWinner(gameOver.winner, gameOver.reason);
+      return;
+    }
+    
+    // Passer au joueur suivant
+    this.setData({
+      board: moveResult.newBoard,
+      selectedCell: null,
+      pendingCaptureIndex: null,
+      currentPlayer: opponent,
+      player1Score: scores.player1,
+      player2Score: scores.player2,
+      player1Points: newPlayer1Points,
+      player2Points: newPlayer2Points,
+      isSurPlaceAvailable: newIsSurPlaceAvailable,
+      surPlaceInfo: newSurPlaceInfo
     });
   }
 });

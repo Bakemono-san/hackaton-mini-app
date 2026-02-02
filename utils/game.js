@@ -422,8 +422,8 @@ function getDameCapturesInDirection(fromIndex, board, player, direction) {
   const fromCoords = indexToCoords(fromIndex);
   
   let currentIndex = fromIndex + direction;
+  let opponentIndex = null;
   let opponentFound = false;
-  let pathClear = true;
 
   // Parcourir dans la direction jusqu'à atteindre le bord du plateau
   while (isValidPosition(currentIndex)) {
@@ -445,14 +445,15 @@ function getDameCapturesInDirection(fromIndex, board, player, direction) {
 
     // Si on a trouvé un adversaire et que le chemin était clair jusqu'ici
     if (opponentFound) {
-      // Si la case est vide, c'est une capture valide
+      // Si la case est vide, c'est une case d'atterrissage valide
       if (isEmpty(cellValue)) {
         captures.push({
           toIndex: currentIndex,
-          capturedIndex: currentIndex - direction
+          capturedIndex: opponentIndex
         });
+        // Continuer pour trouver toutes les cases d'atterrissage possibles
       } else {
-        // On a rencontré un autre pion, pas de capture possible après
+        // On a rencontré un autre pion, arrêter la recherche
         break;
       }
     } else {
@@ -460,12 +461,12 @@ function getDameCapturesInDirection(fromIndex, board, player, direction) {
       if (isOpponentPiece(cellValue, player)) {
         // Trouvé un adversaire potentiel
         opponentFound = true;
-      } else if (!isEmpty(cellValue) && !isCrossCell(currentIndex)) {
-        // Chemin bloqué par un autre pion (ni vide, ni adversaire)
-        pathClear = false;
+        opponentIndex = currentIndex;
+      } else if (!isEmpty(cellValue)) {
+        // Chemin bloqué par un pion ami, arrêter
         break;
       }
-      // Les cases vides et la croix sont acceptées
+      // Les cases vides sont acceptées (la dame peut sauter par-dessus)
     }
 
     currentIndex += direction;
